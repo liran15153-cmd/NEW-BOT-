@@ -1,0 +1,1 @@
+"""Financial wellness assistant backend."""
