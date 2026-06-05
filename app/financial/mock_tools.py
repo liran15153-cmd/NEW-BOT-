@@ -2,9 +2,13 @@ from dataclasses import dataclass
 
 from app.financial.contracts import (
     CashflowStatusInput,
-    FinancialToolResult,
-    InstallmentSimulationInput,
+    CashflowStatusResult,
+    Currency,
+    InstallmentsSimulationInput,
+    InstallmentsSimulationResult,
     PurchaseSimulationInput,
+    PurchaseSimulationResult,
+    RiskLevel,
 )
 
 
@@ -12,8 +16,9 @@ from app.financial.contracts import (
 class DemoFinancialContext:
     current_balance_minor: int = 250000
     committed_expenses_minor: int = 180000
-    low_buffer_threshold_minor: int = 50000
+    medium_buffer_threshold_minor: int = 100000
     days_until_salary: int = 9
+    currency: Currency = Currency.ILS
 
     @property
     def available_buffer_minor(self) -> int:
@@ -24,62 +29,64 @@ class DemoFinancialTools:
     def __init__(self, context: DemoFinancialContext | None = None) -> None:
         self._context = context or DemoFinancialContext()
 
-    def cashflow_status(self, request: CashflowStatusInput) -> FinancialToolResult:
-        return FinancialToolResult(
-            answer=(
-                "Based on the demo financial context, you have "
-                f"{_format_minor(self._context.available_buffer_minor)} available "
-                "after committed expenses and "
-                f"{self._context.days_until_salary} days until salary day."
+    def cashflow_status(self, request: CashflowStatusInput) -> CashflowStatusResult:
+        return CashflowStatusResult(
+            current_balance_minor=self._context.current_balance_minor,
+            committed_expenses_minor=self._context.committed_expenses_minor,
+            available_buffer_minor=self._context.available_buffer_minor,
+            days_until_salary=self._context.days_until_salary,
+            currency=self._context.currency,
+            risk_level=_risk_for_remaining_buffer(
+                self._context.available_buffer_minor,
+                self._context.medium_buffer_threshold_minor,
             ),
-            tool_called="cashflow_status",
         )
 
     def simulate_purchase(
         self,
         request: PurchaseSimulationInput,
-    ) -> FinancialToolResult:
-        remaining_buffer = self._context.available_buffer_minor - request.amount_minor
+    ) -> PurchaseSimulationResult:
+        available_buffer = self._context.available_buffer_minor
+        remaining_buffer = available_buffer - request.amount_minor
 
-        if remaining_buffer >= self._context.low_buffer_threshold_minor:
-            answer = (
-                "Based on the demo financial context, this purchase looks safe "
-                "and keeps a reasonable buffer until salary day."
-            )
-        elif remaining_buffer >= 0:
-            answer = (
-                "Based on the demo financial context, this purchase is possible "
-                "but would leave a low buffer until salary day."
-            )
-        else:
-            answer = (
-                "Based on the demo financial context, this purchase is not "
-                "recommended because it would exceed the available buffer before "
-                "salary day."
-            )
-
-        return FinancialToolResult(
-            answer=answer,
-            tool_called="simulate_purchase",
+        return PurchaseSimulationResult(
+            amount_minor=request.amount_minor,
+            currency=request.currency,
+            available_buffer_before_purchase_minor=available_buffer,
+            remaining_buffer_minor=remaining_buffer,
+            can_purchase=remaining_buffer >= 0,
+            risk_level=_risk_for_remaining_buffer(
+                remaining_buffer,
+                self._context.medium_buffer_threshold_minor,
+            ),
         )
 
     def simulate_installments(
         self,
-        request: InstallmentSimulationInput,
-    ) -> FinancialToolResult:
-        monthly_payment_minor = request.amount_minor // request.installment_count
+        request: InstallmentsSimulationInput,
+    ) -> InstallmentsSimulationResult:
+        monthly_payment_minor = request.amount_minor // request.months
+        remaining_buffer = self._context.available_buffer_minor - monthly_payment_minor
 
-        return FinancialToolResult(
-            answer=(
-                "Based on the demo financial context, splitting this purchase "
-                f"over {request.installment_count} months would create a monthly "
-                f"payment of {_format_minor(monthly_payment_minor)} and stays "
-                "within the demo buffer."
+        return InstallmentsSimulationResult(
+            amount_minor=request.amount_minor,
+            months=request.months,
+            monthly_payment_minor=monthly_payment_minor,
+            currency=request.currency,
+            remaining_buffer_minor=remaining_buffer,
+            risk_level=_risk_for_remaining_buffer(
+                remaining_buffer,
+                self._context.medium_buffer_threshold_minor,
             ),
-            tool_called="simulate_installments",
         )
 
 
-def _format_minor(amount_minor: int) -> str:
-    shekels = amount_minor / 100
-    return f"{shekels:.2f} shekels"
+def _risk_for_remaining_buffer(
+    remaining_buffer_minor: int,
+    medium_buffer_threshold_minor: int,
+) -> RiskLevel:
+    if remaining_buffer_minor < 0:
+        return RiskLevel.HIGH
+    if remaining_buffer_minor < medium_buffer_threshold_minor:
+        return RiskLevel.MEDIUM
+    return RiskLevel.LOW

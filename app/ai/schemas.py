@@ -2,12 +2,15 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.financial.contracts import Currency, RiskLevel
+
 IntentName = Literal[
     "cashflow_status",
     "simulate_purchase",
     "simulate_installments",
     "unknown",
 ]
+ResponseStatus = Literal["answered", "needs_more_info", "unknown", "error"]
 
 
 class ChatMessageRequest(BaseModel):
@@ -25,9 +28,32 @@ class ChatMessageRequest(BaseModel):
         return cleaned
 
 
+class IntentParseResult(BaseModel):
+    intent: IntentName
+    confidence: float = Field(ge=0.0, le=1.0)
+    matched_rule: str | None
+    normalized_message: str
+
+
+class ExtractedParameters(BaseModel):
+    amount_minor: int | None = None
+    currency: Currency | None = None
+    months: int | None = None
+
+
+class ChatDebugInfo(BaseModel):
+    normalized_message: str
+    matched_rule: str | None
+    parameters: ExtractedParameters
+    tool_executed: bool
+    risk_level: RiskLevel | None = None
+
+
 class ChatMessageResponse(BaseModel):
     answer: str
     intent: IntentName
-    tool_called: str
+    status: ResponseStatus
+    tool_called: str | None
     confidence: float = Field(ge=0.0, le=1.0)
     missing_fields: list[str]
+    debug: ChatDebugInfo

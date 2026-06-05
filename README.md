@@ -13,8 +13,10 @@ integration.
   - `simulate_purchase`
   - `simulate_installments`
   - `unknown`
-- Mock financial tools return structured demo answers.
-- Tests cover the API contract, router parsing, and financial tool contracts.
+- Mock financial tools return structured demo data only.
+- The AI response builder converts structured tool results into Hebrew answers.
+- Tests cover the API contract, Hebrew parsing, router structure, and financial
+  tool contracts.
 
 ## Setup
 
@@ -49,24 +51,37 @@ Invoke-RestMethod `
   -Method Post `
   -Uri "http://127.0.0.1:8000/chat/message" `
   -ContentType "application/json" `
-  -Body '{"user_id":"user_123","message":"Can I buy headphones for 400 shekels?"}'
+  -Body '{"user_id":"user_123","message":"אפשר לקנות אוזניות ב-₪400?"}'
 ```
 
 Example response:
 
 ```json
 {
-  "answer": "Based on the demo financial context, this purchase is possible but would leave a low buffer until salary day.",
+  "answer": "לפי נתוני הדמו, אפשר לבצע את הקנייה, אבל היא תשאיר כרית ביטחון נמוכה עד המשכורת.",
   "intent": "simulate_purchase",
+  "status": "answered",
   "tool_called": "simulate_purchase",
   "confidence": 0.85,
-  "missing_fields": []
+  "missing_fields": [],
+  "debug": {
+    "normalized_message": "אפשר לקנות אוזניות ב-₪400?",
+    "matched_rule": "purchase_keyword",
+    "parameters": {
+      "amount_minor": 40000,
+      "currency": "ILS",
+      "months": null
+    },
+    "tool_executed": true,
+    "risk_level": "medium"
+  }
 }
 ```
 
 ## Current Boundaries
 
 This backend is intentionally deterministic. User messages are treated as
-untrusted input and are parsed with small local rules only. Real financial data,
-Supabase, WhatsApp, Open Banking, authentication, file upload, and LLM behavior
-are deliberately deferred until this contract is stable.
+untrusted input and are parsed with small local rules only. Financial tools do
+not write user-facing text. Real financial data, Supabase, WhatsApp, Open
+Banking, authentication, file upload, and LLM behavior are deliberately deferred
+until this contract is stable.
