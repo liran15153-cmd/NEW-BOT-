@@ -1,0 +1,50 @@
+---
+type: concept
+status: current
+source: code
+---
+
+# Decision Engine
+
+`financial_decision_engine.py` converts structured financial facts into structured outcomes.
+
+## Outputs
+
+- risk level
+- reason codes
+- recommended action
+- computed amounts
+- booleans such as `can_purchase`
+
+## How To Think About Decisions
+
+The decision engine should answer: "Given the facts, what is the structured financial interpretation?" It should not answer: "How should we phrase this to the user?" That wording belongs later.
+
+For purchases, the core question is whether the user remains above or below a safe buffer after the purchase. For installments, the key value is the monthly payment impact. For cashflow, the important context is available buffer, safe-to-spend amount, days until salary, and expected expenses.
+
+## Risk Levels
+
+- `low`
+- `medium`
+- `high`
+
+## Recommended Actions
+
+- `proceed`
+- `wait`
+- `reduce_amount`
+- `avoid`
+
+## Boundary
+
+The decision engine must not contain user-facing Hebrew or English answer copy.
+
+## Test Expectations
+
+Tests should assert reason codes and recommended actions, not just one final string. If a future developer changes a threshold, tests should make the behavioral change visible.
+
+## Related Notes
+
+- [[Financial Contracts]]
+- [[Demo Financial Context]]
+- [[Data Readiness]]

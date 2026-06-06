@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BOT V1 Tester</title>
+    <link rel="stylesheet" href="/tester/assets/tester.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="top-bar">
+        <div>
+          <h1>BOT V1 Tester</h1>
+          <p>Local console for testing the financial wellness bot brain.</p>
+        </div>
+        <div class="service-state" id="service-state">Checking API...</div>
+      </header>
+
+      <main class="workspace">
+        <aside class="side-panel" aria-label="Tester controls">
+          <section class="panel-section">
+            <h2>Session</h2>
+            <label for="user-id">User ID</label>
+            <input id="user-id" value="tester_user" autocomplete="off" />
+
+            <label for="session-id">Session ID</label>
+            <input id="session-id" autocomplete="off" />
+
+            <div class="button-row">
+              <button id="new-session-button" type="button">New Session</button>
+              <button id="clear-button" type="button">Clear</button>
+            </div>
+          </section>
+
+          <section class="panel-section">
+            <h2>Scenarios</h2>
+            <div class="scenario-list" id="scenario-list"></div>
+          </section>
+
+          <section class="panel-section">
+            <h2>File Sandbox</h2>
+            <p class="small-copy">
+              Local preview only. Files are not uploaded and do not affect bot answers.
+            </p>
+            <input id="file-input" type="file" accept=".csv,.txt,.json,text/csv,text/plain,application/json" />
+            <div class="file-meta" id="file-meta">No file selected.</div>
+            <pre class="file-preview" id="file-preview"></pre>
+          </section>
+        </aside>
+
+        <section class="chat-panel" aria-label="Chat tester">
+          <div class="chat-log" id="chat-log"></div>
+          <form class="composer" id="chat-form">
+            <textarea
+              id="message-input"
+              rows="2"
+              placeholder="Type a message, for example: אפשר לקנות אוזניות ב-400 שקל?"
+            ></textarea>
+            <button id="send-button" type="submit">Send</button>
+          </form>
+        </section>
+
+        <aside class="debug-panel" aria-label="Debug inspector">
+          <section class="panel-section">
+            <h2>Debug</h2>
+            <dl class="debug-grid">
+              <dt>Intent</dt>
+              <dd id="debug-intent">-</dd>
+              <dt>Status</dt>
+              <dd id="debug-status">-</dd>
+              <dt>Confidence</dt>
+              <dd id="debug-confidence">-</dd>
+              <dt>Missing</dt>
+              <dd id="debug-missing">-</dd>
+              <dt>Tool</dt>
+              <dd id="debug-tool">-</dd>
+              <dt>Executed</dt>
+              <dd id="debug-executed">-</dd>
+              <dt>Risk</dt>
+              <dd id="debug-risk">-</dd>
+              <dt>Reasons</dt>
+              <dd id="debug-reasons">-</dd>
+            </dl>
+          </section>
+
+          <section class="panel-section">
+            <h2>Raw Response</h2>
+            <div class="button-row">
+              <button id="copy-raw-button" type="button">Copy Raw</button>
+              <button id="export-button" type="button">Export Transcript</button>
+            </div>
+            <pre class="raw-json" id="raw-json">{}</pre>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <script src="/tester/assets/tester.js"></script>
+  </body>
+</html>

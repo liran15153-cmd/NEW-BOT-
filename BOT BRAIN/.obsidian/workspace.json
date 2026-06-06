@@ -1,0 +1,234 @@
+{
+  "main": {
+    "id": "ab94215fa6a5a866",
+    "type": "split",
+    "children": [
+      {
+        "id": "1bb2e00bc5ea17f9",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "86ea45ecaf67dd61",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
+          }
+        ]
+      },
+      {
+        "id": "1c9d17e4ecc4b6e9",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "7a7d1a2ee1cc2f1f",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "998615cf5bf481c4",
+    "type": "split",
+    "children": [
+      {
+        "id": "e87f357a42246b09",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "51e0108d9cc04ec7",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "e731a62df91f68df",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "0d353969bfbf4d3a",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "270d34aafe19f863",
+    "type": "split",
+    "children": [
+      {
+        "id": "8ce724ba07b448ad",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d96487c17a0a4f95",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "2500bde076dc7d92",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "50e98dad9f88757d",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "f954bf4e0173ba4a",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "e2c908527c2e9841",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "7a7d1a2ee1cc2f1f",
+  "lastOpenFiles": [
+    "99 - Agent Instructions/How To Work On This Project.md",
+    "99 - Agent Instructions/Change Checklist.md",
+    "99 - Agent Instructions",
+    "09 - Decisions/Open Decisions.md",
+    "09 - Decisions/Decision Log.md",
+    "09 - Decisions",
+    "08 - Glossary/Glossary.md",
+    "08 - Glossary",
+    "07 - Roadmap/WhatsApp Stage.md",
+    "07 - Roadmap/Real LLM Stage.md",
+    "07 - Roadmap/Next Best Steps.md",
+    "07 - Roadmap/Future Data Sources.md",
+    "07 - Roadmap",
+    "06 - Testing and QA/Test Suite Overview.md",
+    "06 - Testing and QA/Manual Tester QA.md",
+    "06 - Testing and QA/Acceptance Checklist.md",
+    "06 - Testing and QA",
+    "05 - Safety and Privacy/Privacy Model.md",
+    "05 - Safety and Privacy/Safety Boundaries.md",
+    "05 - Safety and Privacy/Prompt Injection Rules.md",
+    "05 - Safety and Privacy/Do Not Build Yet.md",
+    "05 - Safety and Privacy",
+    "00 - Maps/System Map.md",
+    "Home.md",
+    "03 - Bot Brain/Debug Metadata.md",
+    "00 - Maps/Testing Map.md",
+    "Welcome.md",
+    "04 - Financial Logic/Money Representation.md",
+    "04 - Financial Logic/Financial Contracts.md",
+    "04 - Financial Logic/Demo Financial Context.md",
+    "04 - Financial Logic/Decision Engine.md",
+    "04 - Financial Logic/Data Readiness.md",
+    "04 - Financial Logic",
+    "03 - Bot Brain",
+    "02 - Architecture",
+    "01 - Product"
+  ]
+}
