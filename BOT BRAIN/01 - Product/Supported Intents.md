@@ -11,6 +11,7 @@ There are two related intent layers: assistant-level intents and executable fina
 ## Assistant Intents
 
 - `cashflow_status`
+- `weekly_safe_spend`
 - `affordability_check`
 - `payment_split_simulation`
 - `recurring_expenses`
@@ -32,6 +33,7 @@ This split is important because one user message can contain overlapping signals
 ## Executable Current Tools
 
 - `cashflow_status` -> `cashflow_status`
+- `weekly_safe_spend` -> `weekly_spend`
 - `affordability_check` -> `simulate_purchase`
 - `payment_split_simulation` -> `simulate_installments`
 

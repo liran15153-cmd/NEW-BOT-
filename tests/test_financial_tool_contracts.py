@@ -9,6 +9,9 @@
     PurchaseSimulationInput,
     PurchaseSimulationResult,
     PurchaseSimulationTool,
+    WeeklySpendInput,
+    WeeklySpendResult,
+    WeeklySpendTool,
 )
 from app.financial.demo_financial_tools import DemoFinancialTools
 
@@ -19,6 +22,7 @@ def test_demo_tools_satisfy_financial_protocols() -> None:
     assert isinstance(tools, CashflowStatusTool)
     assert isinstance(tools, PurchaseSimulationTool)
     assert isinstance(tools, InstallmentsSimulationTool)
+    assert isinstance(tools, WeeklySpendTool)
 
 
 def test_financial_result_models_are_structured_data_without_answers() -> None:
@@ -49,16 +53,30 @@ def test_financial_result_models_are_structured_data_without_answers() -> None:
         buffer_after_monthly_payment_minor=40000,
         days_until_salary=9,
     )
+    weekly_spend = WeeklySpendResult(
+        available_buffer_minor=70000,
+        safe_to_spend_until_salary_minor=50000,
+        daily_safe_to_spend_minor=5555,
+        weekly_safe_to_spend_minor=38888,
+        projected_buffer_after_weekly_spend_minor=31112,
+        days_until_salary=9,
+        projection_days=7,
+        currency=Currency.ILS,
+        expected_expenses_high=True,
+    )
 
     assert "answer" not in CashflowStatusResult.model_fields
     assert "answer" not in PurchaseSimulationResult.model_fields
     assert "answer" not in InstallmentsSimulationResult.model_fields
+    assert "answer" not in WeeklySpendResult.model_fields
     assert "risk_level" not in CashflowStatusResult.model_fields
     assert "risk_level" not in PurchaseSimulationResult.model_fields
     assert "risk_level" not in InstallmentsSimulationResult.model_fields
+    assert "risk_level" not in WeeklySpendResult.model_fields
     assert cashflow.safe_to_spend_minor == 50000
     assert purchase.currency == Currency.ILS
     assert installments.months == 3
+    assert weekly_spend.weekly_safe_to_spend_minor == 38888
 
 
 def test_demo_cashflow_status_returns_structured_result() -> None:
@@ -68,6 +86,22 @@ def test_demo_cashflow_status_returns_structured_result() -> None:
 
     assert result.available_buffer_minor == 70000
     assert result.safe_to_spend_minor == 50000
+    assert result.days_until_salary == 9
+    assert result.expected_expenses_high is True
+    assert not hasattr(result, "answer")
+    assert not hasattr(result, "risk_level")
+
+
+def test_demo_weekly_spend_returns_conservative_projection() -> None:
+    tools = DemoFinancialTools()
+
+    result = tools.weekly_spend(WeeklySpendInput(user_id="user_123"))
+
+    assert result.safe_to_spend_until_salary_minor == 50000
+    assert result.daily_safe_to_spend_minor == 5555
+    assert result.weekly_safe_to_spend_minor == 38888
+    assert result.projected_buffer_after_weekly_spend_minor == 31112
+    assert result.projection_days == 7
     assert result.days_until_salary == 9
     assert result.expected_expenses_high is True
     assert not hasattr(result, "answer")
@@ -122,5 +156,4 @@ def test_demo_installment_simulation_rounds_monthly_payment_up() -> None:
 
     assert result.monthly_payment_minor == 3334
     assert result.buffer_after_monthly_payment_minor == 66666
-
 

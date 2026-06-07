@@ -48,6 +48,30 @@ def test_hebrew_cashflow_question_maps_to_cashflow_status() -> None:
     _assert_hebrew_answer(body["answer"])
 
 
+def test_weekly_safe_spend_question_returns_deterministic_projection() -> None:
+    response = post_json(
+        "/chat/message",
+        {
+            "user_id": "user_123",
+            "message": "כמה אפשר להוציא השבוע?",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["intent"] == "weekly_spend"
+    assert body["status"] == "answered"
+    assert body["tool_called"] == "weekly_spend"
+    assert body["confidence"] == 0.88
+    assert body["missing_fields"] == []
+    assert body["debug"]["tool_executed"] is True
+    assert body["debug"]["assistant_intent"] == "weekly_safe_spend"
+    assert body["debug"]["risk_level"] == "medium"
+    assert "388.88" in body["answer"]
+    assert "השבוע" in body["answer"]
+    _assert_hebrew_answer(body["answer"])
+
+
 def test_hebrew_purchase_question_with_shekel_symbol_maps_to_simulate_purchase() -> None:
     response = post_json(
         "/chat/message",

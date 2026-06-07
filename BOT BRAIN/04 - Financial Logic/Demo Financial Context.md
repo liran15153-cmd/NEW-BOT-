@@ -16,6 +16,10 @@ Demo context allows the bot-brain flow, decision engine, policy layer, and Hebre
 
 Demo facts let the project verify the shape of decisions before real data exists. The team can test whether the system handles safe purchases, tight purchases, risky purchases, installments, and cash-flow explanations without exposing real users or building a database too early.
 
+The default demo facts currently support weekly safe-spend projection too:
+`500.00 ILS` safe-to-spend over 9 days until salary becomes `388.88 ILS` for
+the next 7 days. The projection uses integer minor-unit math and rounds down.
+
 Demo context is not a toy if it is used correctly. It is the contract rehearsal for production data.
 
 ## Product Wording Rule

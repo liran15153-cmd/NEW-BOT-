@@ -23,6 +23,7 @@ The backend currently supports:
 - structured financial tool contracts
 - mock financial tools with demo financial facts
 - deterministic financial decision engine
+- deterministic weekly safe-spend projection from demo cash-flow facts
 - Hebrew user-facing answers
 - internal debug metadata for testing
 - pytest coverage for API, bot, dialogue, financial contracts, architecture, and
@@ -106,6 +107,7 @@ Missing-field and unknown-intent cases must not call financial tools.
 
 ```text
 cashflow_status
+weekly_spend
 simulate_purchase
 simulate_installments
 privacy_question
@@ -133,6 +135,23 @@ Expected tool behavior:
   `debug.tool_executed = true`
 - `needs_more_info`: `tool_called = null` and `debug.tool_executed = false`
 - `unknown`: `tool_called = null` and `debug.tool_executed = false`
+
+## Weekly Safe-Spend Projection
+
+The backend supports questions such as:
+
+```text
+כמה אפשר להוציא השבוע?
+How much can I safely spend this week?
+```
+
+The current demo tool computes this from the existing safe-to-spend amount until
+salary. It projects at most the next 7 days, prorates the safe-to-spend amount
+over the remaining days until salary using integer minor-unit math, and rounds
+the weekly cap down so the assistant does not overstate what is safe.
+
+With the default demo facts, `500.00 ILS` safe-to-spend over 9 days produces a
+weekly cap of `388.88 ILS`.
 
 ## Setup
 
@@ -301,5 +320,3 @@ store user financial data, import files, or call external AI providers.
 
 Before adding real data infrastructure, the project needs explicit decisions on
 data source, privacy rules, retention, authentication, and test coverage.
-
-

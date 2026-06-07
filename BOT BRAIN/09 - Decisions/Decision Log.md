@@ -14,6 +14,7 @@ source: docs
 - Keep routes thin.
 - Keep financial facts separate from answer wording.
 - Keep final Hebrew copy centralized in `hebrew_response_builder.py`.
+- Support weekly safe-spend as a deterministic projection before richer data infrastructure.
 - Use in-memory state only for short clarification flows.
 - Recognize unsupported and future intents without pretending they are implemented.
 - Keep tests as architecture guardrails.
@@ -23,6 +24,11 @@ source: docs
 Bot brain first: The team needs to prove useful conversation behavior before adding sensitive infrastructure. This is why WhatsApp, Supabase, Open Banking, and LLMs remain deferred.
 
 Deterministic first: The current system uses rules and structured tools so behavior can be tested directly. This reduces the chance of fake financial certainty.
+
+Weekly safe-spend: This is a useful employee question that can be answered from
+the existing demo cash-flow facts. It should stay conservative: prorate the
+safe-to-spend amount until salary across the next 7 days and round down in minor
+currency units.
 
 Centralized Hebrew copy: The product is Hebrew-facing, so answer quality needs one obvious ownership point. Scattered copy would make QA and tone control harder.
 

@@ -8,6 +8,7 @@ from app.financial.financial_contracts import (
     InstallmentsSimulationResult,
     PurchaseSimulationResult,
     RiskLevel,
+    WeeklySpendResult,
 )
 from app.financial.financial_reason_codes import ReasonCode
 
@@ -17,12 +18,27 @@ class RecommendedAction(str, Enum):
     WAIT = "wait"
     REDUCE_AMOUNT = "reduce_amount"
     AVOID = "avoid"
+    LIMIT_TO_SAFE_AMOUNT = "limit_to_safe_amount"
 
 
 class CashflowDecisionResult(BaseModel):
     available_buffer_minor: int
     safe_to_spend_minor: int
     days_until_salary: int
+    currency: Currency
+    risk_level: RiskLevel
+    reason_codes: list[ReasonCode]
+    recommended_action: RecommendedAction
+
+
+class WeeklySpendDecisionResult(BaseModel):
+    available_buffer_minor: int
+    safe_to_spend_until_salary_minor: int
+    daily_safe_to_spend_minor: int
+    weekly_safe_to_spend_minor: int
+    projected_buffer_after_weekly_spend_minor: int
+    days_until_salary: int
+    projection_days: int
     currency: Currency
     risk_level: RiskLevel
     reason_codes: list[ReasonCode]
@@ -55,7 +71,10 @@ class InstallmentsDecisionResult(BaseModel):
 
 
 DecisionResult = (
-    CashflowDecisionResult | PurchaseDecisionResult | InstallmentsDecisionResult
+    CashflowDecisionResult
+    | WeeklySpendDecisionResult
+    | PurchaseDecisionResult
+    | InstallmentsDecisionResult
 )
 
 
@@ -90,6 +109,42 @@ class FinancialDecisionEngine:
             risk_level=risk_level,
             reason_codes=reason_codes,
             recommended_action=recommended_action,
+        )
+
+    def decide_weekly_spend(
+        self,
+        facts: WeeklySpendResult,
+    ) -> WeeklySpendDecisionResult:
+        reason_codes: list[ReasonCode] = []
+        if facts.weekly_safe_to_spend_minor > 0:
+            reason_codes.append(ReasonCode.SAFE_WEEKLY_SPEND_AVAILABLE)
+        else:
+            reason_codes.append(ReasonCode.NO_SAFE_WEEKLY_SPEND)
+        if facts.projection_days < facts.days_until_salary:
+            reason_codes.append(ReasonCode.WEEKLY_SPEND_LIMITED_BY_PAYDAY_DISTANCE)
+        if facts.days_until_salary >= 7:
+            reason_codes.append(ReasonCode.MANY_DAYS_UNTIL_SALARY)
+        if facts.expected_expenses_high:
+            reason_codes.append(ReasonCode.EXPECTED_EXPENSES_HIGH)
+
+        risk_level = _weekly_spend_risk(facts)
+        return WeeklySpendDecisionResult(
+            available_buffer_minor=facts.available_buffer_minor,
+            safe_to_spend_until_salary_minor=facts.safe_to_spend_until_salary_minor,
+            daily_safe_to_spend_minor=facts.daily_safe_to_spend_minor,
+            weekly_safe_to_spend_minor=facts.weekly_safe_to_spend_minor,
+            projected_buffer_after_weekly_spend_minor=(
+                facts.projected_buffer_after_weekly_spend_minor
+            ),
+            days_until_salary=facts.days_until_salary,
+            projection_days=facts.projection_days,
+            currency=facts.currency,
+            risk_level=risk_level,
+            reason_codes=reason_codes,
+            recommended_action=_weekly_spend_action(
+                weekly_safe_to_spend_minor=facts.weekly_safe_to_spend_minor,
+                risk_level=risk_level,
+            ),
         )
 
     def decide_purchase(
@@ -180,6 +235,33 @@ def _risk_from_buffer(
     if remaining_buffer_minor < safe_to_spend_minor or expected_expenses_high:
         return RiskLevel.MEDIUM
     return RiskLevel.LOW
+
+
+def _weekly_spend_risk(facts: WeeklySpendResult) -> RiskLevel:
+    if (
+        facts.weekly_safe_to_spend_minor <= 0
+        or facts.projected_buffer_after_weekly_spend_minor < 0
+    ):
+        return RiskLevel.HIGH
+    if (
+        facts.expected_expenses_high
+        or facts.projection_days < facts.days_until_salary
+        or facts.available_buffer_minor < facts.safe_to_spend_until_salary_minor
+    ):
+        return RiskLevel.MEDIUM
+    return RiskLevel.LOW
+
+
+def _weekly_spend_action(
+    *,
+    weekly_safe_to_spend_minor: int,
+    risk_level: RiskLevel,
+) -> RecommendedAction:
+    if weekly_safe_to_spend_minor <= 0 or risk_level == RiskLevel.HIGH:
+        return RecommendedAction.WAIT
+    if risk_level == RiskLevel.MEDIUM:
+        return RecommendedAction.LIMIT_TO_SAFE_AMOUNT
+    return RecommendedAction.PROCEED
 
 
 def _purchase_action(

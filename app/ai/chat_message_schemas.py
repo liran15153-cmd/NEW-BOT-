@@ -12,6 +12,7 @@ from app.financial.financial_reason_codes import ReasonCode
 
 IntentName = Literal[
     "cashflow_status",
+    "weekly_spend",
     "simulate_purchase",
     "simulate_installments",
     "affordability_check",

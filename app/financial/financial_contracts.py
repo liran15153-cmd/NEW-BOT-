@@ -28,6 +28,22 @@ class CashflowStatusResult(BaseModel):
     expected_expenses_high: bool
 
 
+class WeeklySpendInput(BaseModel):
+    user_id: str = Field(min_length=1)
+
+
+class WeeklySpendResult(BaseModel):
+    available_buffer_minor: int
+    safe_to_spend_until_salary_minor: int
+    daily_safe_to_spend_minor: int
+    weekly_safe_to_spend_minor: int
+    projected_buffer_after_weekly_spend_minor: int
+    days_until_salary: int
+    projection_days: int
+    currency: Currency
+    expected_expenses_high: bool
+
+
 class PurchaseSimulationInput(BaseModel):
     user_id: str = Field(min_length=1)
     amount_minor: int = Field(gt=0)
@@ -68,6 +84,12 @@ class CashflowStatusTool(Protocol):
 
 
 @runtime_checkable
+class WeeklySpendTool(Protocol):
+    def weekly_spend(self, request: WeeklySpendInput) -> WeeklySpendResult:
+        ...
+
+
+@runtime_checkable
 class PurchaseSimulationTool(Protocol):
     def simulate_purchase(
         self,
@@ -88,6 +110,7 @@ class InstallmentsSimulationTool(Protocol):
 @runtime_checkable
 class FinancialTools(
     CashflowStatusTool,
+    WeeklySpendTool,
     PurchaseSimulationTool,
     InstallmentsSimulationTool,
     Protocol,

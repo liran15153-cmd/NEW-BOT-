@@ -11,6 +11,7 @@ The backend supports a narrow but valuable set of financial wellness conversatio
 ## Supported Behavior
 
 - `cashflow_status`: answer how much buffer remains until salary day.
+- `weekly_spend`: estimate what can safely be spent this week from demo facts.
 - `simulate_purchase`: check whether a specific purchase fits the demo buffer.
 - `simulate_installments`: estimate monthly payment impact for installments.
 - `privacy_question`: explain current and future privacy boundaries.
@@ -19,7 +20,7 @@ The backend supports a narrow but valuable set of financial wellness conversatio
 
 ## Behavior By Scenario
 
-Cash-flow questions should explain available buffer, safe-to-spend amount, days until salary, and risk level when those values exist. Purchase questions should never answer only "yes" or "no"; they should explain whether the purchase is safe, tight, or not recommended. Installment questions should mention monthly payment impact and avoid presenting installments as automatically better.
+Cash-flow questions should explain available buffer, safe-to-spend amount, days until salary, and risk level when those values exist. Weekly safe-spend questions should give a conservative cap for the next 7 days, calculated from the safe-to-spend amount until salary and rounded down in minor units. Purchase questions should never answer only "yes" or "no"; they should explain whether the purchase is safe, tight, or not recommended. Installment questions should mention monthly payment impact and avoid presenting installments as automatically better.
 
 Privacy questions should answer the user's concern directly. The current system has no employer-facing layer and no real user financial data. Future employer analytics, if ever built, must be aggregated and anonymized.
 

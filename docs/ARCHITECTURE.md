@@ -20,6 +20,7 @@ The backend currently supports:
 - structured financial contracts
 - mock financial tools
 - a deterministic financial decision engine
+- deterministic weekly safe-spend projection from demo cash-flow facts
 - Hebrew user-facing responses
 - pytest coverage for API behavior, bot behavior, dialogue state, financial contracts, architecture boundaries, and audit checks
 
@@ -293,6 +294,19 @@ Current chat response must stay structured:
 ```
 
 Debug is internal metadata. Product behavior must not depend on debug fields.
+
+Current executable financial intents:
+
+```txt
+cashflow_status
+weekly_spend
+simulate_purchase
+simulate_installments
+```
+
+`weekly_spend` is a projection over the existing safe-to-spend amount until
+salary. It must be calculated with integer minor-unit math and rounded down so
+the assistant does not overstate what is safe to spend this week.
 
 ## Financial Model Rules
 

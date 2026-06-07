@@ -20,7 +20,7 @@ source: code
 
 The decision engine should answer: "Given the facts, what is the structured financial interpretation?" It should not answer: "How should we phrase this to the user?" That wording belongs later.
 
-For purchases, the core question is whether the user remains above or below a safe buffer after the purchase. For installments, the key value is the monthly payment impact. When an amount does not divide evenly across installments, the monthly payment should be rounded up to the nearest minor currency unit so the assistant does not understate the user's future obligation. For cashflow, the important context is available buffer, safe-to-spend amount, days until salary, and expected expenses.
+For purchases, the core question is whether the user remains above or below a safe buffer after the purchase. For installments, the key value is the monthly payment impact. When an amount does not divide evenly across installments, the monthly payment should be rounded up to the nearest minor currency unit so the assistant does not understate the user's future obligation. For cashflow, the important context is available buffer, safe-to-spend amount, days until salary, and expected expenses. For weekly safe-spend, the key value is a conservative cap for the next 7 days, prorated from the safe-to-spend amount until salary and rounded down in minor units.
 
 ## Risk Levels
 
@@ -34,6 +34,7 @@ For purchases, the core question is whether the user remains above or below a sa
 - `wait`
 - `reduce_amount`
 - `avoid`
+- `limit_to_safe_amount`
 
 ## Boundary
 

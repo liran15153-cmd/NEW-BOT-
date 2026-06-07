@@ -7,6 +7,7 @@ from app.financial.financial_contracts import (
     InstallmentsSimulationInput,
     PurchaseSimulationInput,
     RiskLevel,
+    WeeklySpendInput,
 )
 from app.financial.financial_decision_engine import DecisionResult, FinancialDecisionEngine
 from app.financial.financial_reason_codes import ReasonCode
@@ -33,6 +34,13 @@ def execute_tool(
         return _executed(
             "cashflow_status",
             decision_engine.decide_cashflow(facts),
+        )
+
+    if intent == "weekly_spend":
+        facts = tools.weekly_spend(WeeklySpendInput(user_id=user_id))
+        return _executed(
+            "weekly_spend",
+            decision_engine.decide_weekly_spend(facts),
         )
 
     if intent == "simulate_purchase":

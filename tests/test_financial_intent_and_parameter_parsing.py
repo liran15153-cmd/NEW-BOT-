@@ -52,9 +52,20 @@ def test_extract_months_supports_hebrew_and_english_payment_phrases(
 
 def test_parse_intent_supports_hebrew_financial_messages() -> None:
     assert parse_intent("מה מצב התזרים שלי?").intent == "cashflow_status"
+    assert parse_intent("כמה אפשר להוציא השבוע?").intent == "weekly_spend"
     assert parse_intent("אפשר לקנות את זה?").intent == "simulate_purchase"
     assert parse_intent("מה יקרה אם אפרוס לתשלומים?").intent == "simulate_installments"
     assert parse_intent("Tell me a joke").intent == "unknown"
+
+
+def test_parse_intent_detects_weekly_safe_spend_before_generic_spend() -> None:
+    hebrew = parse_intent("מה הסכום הבטוח שאפשר להוציא השבוע?")
+    english = parse_intent("How much can I safely spend this week?")
+
+    assert hebrew.intent == "weekly_spend"
+    assert hebrew.matched_rule == "weekly_spend_keyword"
+    assert english.intent == "weekly_spend"
+    assert english.matched_rule == "weekly_spend_keyword"
 
 
 def test_router_contains_no_regex_patterns_or_user_facing_text() -> None:

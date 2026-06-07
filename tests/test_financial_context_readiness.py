@@ -60,6 +60,17 @@ def test_full_context_is_high_readiness_but_projections_still_need_uncertainty()
     assert result.missing_fields == []
 
 
+def test_weekly_safe_spend_requires_balance_and_salary_context() -> None:
+    result = evaluate_financial_context_readiness(
+        {"has_transactions": True},
+        assistant_intent=AssistantIntent.WEEKLY_SAFE_SPEND,
+    )
+
+    assert result.level == DataReadinessLevel.LOW
+    assert result.can_answer is False
+    assert result.missing_fields == ["current_balance", "next_salary_date"]
+
+
 def test_import_warnings_and_duplicates_force_uncertainty() -> None:
     result = evaluate_financial_context_readiness(
         {

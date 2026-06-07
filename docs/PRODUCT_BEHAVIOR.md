@@ -23,6 +23,7 @@ The current backend supports:
 - demo installment simulation
 - unknown / unsupported message handling
 - structured debug metadata for internal testing
+- deterministic weekly safe-spend projection from demo cash-flow facts
 
 The current backend does not support:
 
@@ -51,7 +52,7 @@ The assistant should help a user understand a near-term financial decision in pl
 For the current backend, that means:
 
 ```txt
-The user can ask a simple cash-flow, purchase, or installment question and receive a clear Hebrew response based on deterministic demo financial context.
+The user can ask a simple cash-flow, weekly safe-spend, purchase, or installment question and receive a clear Hebrew response based on deterministic demo financial context.
 ```
 
 The assistant should feel:
@@ -82,6 +83,7 @@ The current primary user is an internal tester or early employee-style end user 
 They want to ask:
 
 - How is my cash flow?
+- What can I safely spend this week?
 - Can I buy this?
 - Can I buy this for a specific amount?
 - What happens if I split this purchase into payments?
@@ -126,7 +128,45 @@ Current limitation:
 The answer is based on mock/demo financial facts only.
 ```
 
-### 2. Purchase Simulation
+### 2. Weekly Safe-Spend Projection
+
+User intent:
+
+```txt
+weekly_spend
+```
+
+Example user questions:
+
+```txt
+כמה אפשר להוציא השבוע?
+מה הסכום הבטוח שאפשר להוציא השבוע?
+How much can I safely spend this week?
+```
+
+Expected behavior:
+
+- Return a Hebrew answer based on demo financial context.
+- Include the projected weekly safe-to-spend amount.
+- Mention that the amount is calculated from the remaining days until salary.
+- Do not claim this is live bank data or a production budget.
+
+Current deterministic rule:
+
+```txt
+weekly_safe_to_spend = floor(safe_to_spend_until_salary * min(7, days_until_salary) / days_until_salary)
+```
+
+The calculation uses minor currency units and rounds down so the answer does not
+overstate what is safe.
+
+Current default demo result:
+
+```txt
+500.00 ILS safe-to-spend over 9 days -> 388.88 ILS safe this week
+```
+
+### 3. Purchase Simulation
 
 User intent:
 
@@ -159,7 +199,7 @@ Expected behavior when amount is missing:
 
 The assistant should not answer only “yes” or “no” unless the structured decision makes that safe.
 
-### 3. Installment Simulation
+### 4. Installment Simulation
 
 User intent:
 
@@ -198,7 +238,7 @@ Important product rule:
 Installments can reduce short-term pressure but create future obligations. Do not present installments as automatically better.
 ```
 
-### 4. Unknown Or Unsupported Message
+### 5. Unknown Or Unsupported Message
 
 User intent:
 
@@ -584,5 +624,3 @@ These should not be guessed by coding agents:
 8. When should WhatsApp become the first real channel?
 9. When is a real LLM useful enough to justify privacy and reliability risk?
 10. What disclaimers are required before production release?
-
-

@@ -8,6 +8,8 @@ from app.financial.financial_contracts import (
     InstallmentsSimulationResult,
     PurchaseSimulationInput,
     PurchaseSimulationResult,
+    WeeklySpendInput,
+    WeeklySpendResult,
 )
 
 
@@ -36,6 +38,31 @@ class DemoFinancialTools:
             available_buffer_minor=self._context.available_buffer_minor,
             safe_to_spend_minor=self._context.safe_to_spend_minor,
             days_until_salary=self._context.days_until_salary,
+            currency=self._context.currency,
+            expected_expenses_high=self._context.expected_expenses_high,
+        )
+
+    def weekly_spend(self, request: WeeklySpendInput) -> WeeklySpendResult:
+        projection_days = _bounded_projection_days(self._context.days_until_salary)
+        weekly_safe_to_spend = _project_safe_spend_minor(
+            safe_to_spend_minor=self._context.safe_to_spend_minor,
+            days_until_salary=self._context.days_until_salary,
+            projection_days=projection_days,
+        )
+
+        return WeeklySpendResult(
+            available_buffer_minor=self._context.available_buffer_minor,
+            safe_to_spend_until_salary_minor=self._context.safe_to_spend_minor,
+            daily_safe_to_spend_minor=_daily_safe_spend_minor(
+                self._context.safe_to_spend_minor,
+                self._context.days_until_salary,
+            ),
+            weekly_safe_to_spend_minor=weekly_safe_to_spend,
+            projected_buffer_after_weekly_spend_minor=(
+                self._context.available_buffer_minor - weekly_safe_to_spend
+            ),
+            days_until_salary=self._context.days_until_salary,
+            projection_days=projection_days,
             currency=self._context.currency,
             expected_expenses_high=self._context.expected_expenses_high,
         )
@@ -77,4 +104,29 @@ class DemoFinancialTools:
 def _ceil_divide_minor(amount_minor: int, parts: int) -> int:
     return -(-amount_minor // parts)
 
+
+def _bounded_projection_days(days_until_salary: int) -> int:
+    if days_until_salary <= 0:
+        return 0
+    return min(7, days_until_salary)
+
+
+def _daily_safe_spend_minor(
+    safe_to_spend_minor: int,
+    days_until_salary: int,
+) -> int:
+    if safe_to_spend_minor <= 0 or days_until_salary <= 0:
+        return 0
+    return safe_to_spend_minor // days_until_salary
+
+
+def _project_safe_spend_minor(
+    *,
+    safe_to_spend_minor: int,
+    days_until_salary: int,
+    projection_days: int,
+) -> int:
+    if safe_to_spend_minor <= 0 or days_until_salary <= 0 or projection_days <= 0:
+        return 0
+    return (safe_to_spend_minor * projection_days) // days_until_salary
 

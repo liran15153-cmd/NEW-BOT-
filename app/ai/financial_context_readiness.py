@@ -7,6 +7,7 @@ from app.ai.assistant_policy_schemas import (
 
 _PROJECTION_INTENTS = {
     AssistantIntent.CASHFLOW_STATUS,
+    AssistantIntent.WEEKLY_SAFE_SPEND,
     AssistantIntent.AFFORDABILITY_CHECK,
     AssistantIntent.PAYMENT_SPLIT_SIMULATION,
 }

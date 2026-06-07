@@ -3,6 +3,7 @@
     Currency,
     InstallmentsSimulationResult,
     PurchaseSimulationResult,
+    WeeklySpendResult,
 )
 from app.financial.financial_decision_engine import FinancialDecisionEngine, RecommendedAction
 from app.financial.financial_reason_codes import ReasonCode
@@ -85,6 +86,56 @@ def test_cashflow_decision_returns_structured_cashflow_context() -> None:
 
     assert decision.available_buffer_minor == 70000
     assert ReasonCode.EXPECTED_EXPENSES_HIGH in decision.reason_codes
+    assert decision.recommended_action == RecommendedAction.WAIT
+
+
+def test_weekly_spend_decision_returns_structured_projection() -> None:
+    decision = FinancialDecisionEngine().decide_weekly_spend(
+        WeeklySpendResult(
+            available_buffer_minor=70000,
+            safe_to_spend_until_salary_minor=50000,
+            daily_safe_to_spend_minor=5555,
+            weekly_safe_to_spend_minor=38888,
+            projected_buffer_after_weekly_spend_minor=31112,
+            days_until_salary=9,
+            projection_days=7,
+            currency=Currency.ILS,
+            expected_expenses_high=True,
+        )
+    )
+
+    assert decision.weekly_safe_to_spend_minor == 38888
+    assert decision.daily_safe_to_spend_minor == 5555
+    assert decision.projected_buffer_after_weekly_spend_minor == 31112
+    assert decision.projection_days == 7
+    assert decision.risk_level == "medium"
+    assert decision.reason_codes == [
+        ReasonCode.SAFE_WEEKLY_SPEND_AVAILABLE,
+        ReasonCode.WEEKLY_SPEND_LIMITED_BY_PAYDAY_DISTANCE,
+        ReasonCode.MANY_DAYS_UNTIL_SALARY,
+        ReasonCode.EXPECTED_EXPENSES_HIGH,
+    ]
+    assert decision.recommended_action == RecommendedAction.LIMIT_TO_SAFE_AMOUNT
+    assert "answer" not in type(decision).model_fields
+
+
+def test_weekly_spend_decision_handles_no_safe_amount_as_high_risk() -> None:
+    decision = FinancialDecisionEngine().decide_weekly_spend(
+        WeeklySpendResult(
+            available_buffer_minor=15000,
+            safe_to_spend_until_salary_minor=0,
+            daily_safe_to_spend_minor=0,
+            weekly_safe_to_spend_minor=0,
+            projected_buffer_after_weekly_spend_minor=15000,
+            days_until_salary=5,
+            projection_days=5,
+            currency=Currency.ILS,
+            expected_expenses_high=False,
+        )
+    )
+
+    assert decision.risk_level == "high"
+    assert decision.reason_codes == [ReasonCode.NO_SAFE_WEEKLY_SPEND]
     assert decision.recommended_action == RecommendedAction.WAIT
 
 

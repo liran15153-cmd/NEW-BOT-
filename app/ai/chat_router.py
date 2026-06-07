@@ -221,6 +221,8 @@ def _missing_fields(intent: IntentName, parameters: ExtractedParameters) -> list
 def _assistant_intent_for_resolved_intent(intent: IntentName) -> AssistantIntent:
     if intent == "cashflow_status":
         return AssistantIntent.CASHFLOW_STATUS
+    if intent == "weekly_spend":
+        return AssistantIntent.WEEKLY_SAFE_SPEND
     if intent == "simulate_purchase":
         return AssistantIntent.AFFORDABILITY_CHECK
     if intent == "simulate_installments":

@@ -23,6 +23,15 @@ _PURCHASE_KEYWORDS = (
     "afford",
     "spend",
 )
+_WEEKLY_SPEND_KEYWORDS = (
+    "כמה אפשר להוציא השבוע",
+    "מה אפשר להוציא השבוע",
+    "להוציא השבוע",
+    "תקציב שבועי",
+    "safe spend this week",
+    "safely spend this week",
+    "weekly budget",
+)
 _CASHFLOW_KEYWORDS = (
     "תזרים",
     "יתרה",
@@ -47,6 +56,14 @@ def parse_intent(message: str) -> IntentParseResult:
             intent="simulate_installments",
             confidence=0.8,
             matched_rule="installments_keyword",
+            normalized_message=normalized,
+        )
+
+    if _contains_any(normalized, _WEEKLY_SPEND_KEYWORDS):
+        return IntentParseResult(
+            intent="weekly_spend",
+            confidence=0.88,
+            matched_rule="weekly_spend_keyword",
             normalized_message=normalized,
         )
 
@@ -76,5 +93,4 @@ def parse_intent(message: str) -> IntentParseResult:
 
 def _contains_any(message: str, keywords: tuple[str, ...]) -> bool:
     return any(keyword in message for keyword in keywords)
-
 

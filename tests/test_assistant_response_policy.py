@@ -127,6 +127,25 @@ def test_full_financial_context_still_marks_projections_as_estimates() -> None:
     assert decision.must_include_uncertainty is True
 
 
+def test_weekly_safe_spend_with_full_context_is_cautious_estimate() -> None:
+    decision = decide_response_policy(
+        user_message="how much can I safely spend this week?",
+        assistant_intent=AssistantIntent.WEEKLY_SAFE_SPEND,
+        financial_context_summary={
+            "has_transactions": True,
+            "has_current_balance": True,
+            "has_salary_date": True,
+            "has_recurring_expenses": True,
+            "has_upcoming_expenses": True,
+            "has_live_bank_data": False,
+        },
+    )
+
+    assert decision.allowed is True
+    assert decision.response_type == ResponseType.CAUTIOUS_ESTIMATE
+    assert decision.must_include_uncertainty is True
+
+
 def test_import_warnings_force_uncertainty() -> None:
     decision = decide_response_policy(
         user_message="can I afford it?",

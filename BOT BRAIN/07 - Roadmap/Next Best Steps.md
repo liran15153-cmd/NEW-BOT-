@@ -23,7 +23,10 @@ The bot brain is stable when the supported scenarios work repeatedly in `/tester
 
 ## Suggested Next Product Scenario
 
-The next useful deterministic scenario is likely a richer cash-flow question, such as "how much can I safely spend this week?" This stays close to the current product promise and avoids new infrastructure.
+Weekly safe-spend is now a current deterministic scenario. The next useful
+cash-flow scenario is likely overdraft risk before salary or upcoming-expense
+pressure, still using demo facts and deterministic services before adding real
+data infrastructure.
 
 ## Not Next
 

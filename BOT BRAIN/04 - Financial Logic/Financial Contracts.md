@@ -11,8 +11,14 @@ source: code
 ## Current Contract Shape
 
 - `CashflowStatusInput` -> `CashflowStatusResult`
+- `WeeklySpendInput` -> `WeeklySpendResult`
 - `PurchaseSimulationInput` -> `PurchaseSimulationResult`
 - `InstallmentsSimulationInput` -> `InstallmentsSimulationResult`
+
+`WeeklySpendResult` carries the safe-to-spend amount until salary, daily
+safe-to-spend amount, projected weekly safe-to-spend amount, projection days,
+remaining days until salary, and projected buffer after that weekly spend. These
+are facts for the response builder; they are not user-facing prose.
 
 ## Design Rule
 

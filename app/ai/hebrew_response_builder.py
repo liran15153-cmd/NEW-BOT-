@@ -16,6 +16,7 @@ from app.financial.financial_decision_engine import (
     CashflowDecisionResult,
     InstallmentsDecisionResult,
     PurchaseDecisionResult,
+    WeeklySpendDecisionResult,
 )
 from app.financial.financial_reason_codes import ReasonCode
 
@@ -333,7 +334,13 @@ def _missing_info_confidence(intent: str) -> float:
 
 
 def _answered_text(
-    result: CashflowDecisionResult | PurchaseDecisionResult | InstallmentsDecisionResult | None,
+    result: (
+        CashflowDecisionResult
+        | WeeklySpendDecisionResult
+        | PurchaseDecisionResult
+        | InstallmentsDecisionResult
+        | None
+    ),
 ) -> str:
     if isinstance(result, CashflowDecisionResult):
         return (
@@ -341,6 +348,21 @@ def _answered_text(
             f"{_format_minor(result.available_buffer_minor)} פנויים, ומתוכם "
             f"{_format_minor(result.safe_to_spend_minor)} מוגדרים כסכום בטוח יחסית. "
             f"יש עוד {result.days_until_salary} ימים עד המשכורת. "
+            f"רמת הסיכון: {_risk_label(result.risk_level)}."
+        )
+
+    if isinstance(result, WeeklySpendDecisionResult):
+        if result.weekly_safe_to_spend_minor <= 0:
+            return (
+                "לפי נתוני הדמו, אין כרגע סכום בטוח להוצאה השבוע. "
+                "עדיף לעצור הוצאות לא הכרחיות עד שתהיה תמונת תזרים ברורה יותר."
+            )
+        return (
+            "לפי נתוני הדמו, הסכום הבטוח יחסית להוצאה השבוע הוא "
+            f"{_format_minor(result.weekly_safe_to_spend_minor)}. "
+            f"זה מחושב על בסיס {result.projection_days} ימים מתוך "
+            f"{result.days_until_salary} ימים עד המשכורת, בערך "
+            f"{_format_minor(result.daily_safe_to_spend_minor)} ליום. "
             f"רמת הסיכון: {_risk_label(result.risk_level)}."
         )
 

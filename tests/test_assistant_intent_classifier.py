@@ -7,6 +7,7 @@ from app.ai.assistant_policy_schemas import AssistantIntent
 
 def test_assistant_intents_map_only_supported_flows_to_executable_intents() -> None:
     assert executable_intent_for(AssistantIntent.CASHFLOW_STATUS) == "cashflow_status"
+    assert executable_intent_for(AssistantIntent.WEEKLY_SAFE_SPEND) == "weekly_spend"
     assert executable_intent_for(AssistantIntent.AFFORDABILITY_CHECK) == "simulate_purchase"
     assert (
         executable_intent_for(AssistantIntent.PAYMENT_SPLIT_SIMULATION)
@@ -106,3 +107,14 @@ def test_classifier_detects_english_intents_and_unknown_requests() -> None:
         == AssistantIntent.UNSUPPORTED_LOAN_ADVICE
     )
     assert classify_assistant_intent("tell me a joke") == AssistantIntent.UNKNOWN
+
+
+def test_classifier_detects_weekly_safe_spend_before_generic_spend() -> None:
+    assert (
+        classify_assistant_intent("כמה אפשר להוציא השבוע?")
+        == AssistantIntent.WEEKLY_SAFE_SPEND
+    )
+    assert (
+        classify_assistant_intent("how much can I safely spend this week?")
+        == AssistantIntent.WEEKLY_SAFE_SPEND
+    )
