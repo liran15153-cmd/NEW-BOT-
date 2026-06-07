@@ -23,11 +23,12 @@ The bot brain is stable when the supported scenarios work repeatedly in `/tester
 
 ## Suggested Next Product Scenario
 
-Weekly safe-spend and overdraft risk before salary are now current deterministic
-scenarios. The next useful cash-flow scenario is likely upcoming-expense
-pressure, still using demo facts and deterministic services. If real transaction
-or import work starts, recurring-payment detection becomes a better next
-subsystem than another demo-only projection.
+Weekly safe-spend, overdraft risk before salary, and upcoming-expense pressure
+are now current deterministic scenarios. The next useful step is no longer
+another demo-only projection; it should either restore the full dev/test/push
+environment or choose the first real data path, such as manual transaction input
+or CSV import. If real transaction or import work starts, recurring-payment
+detection becomes a better next subsystem.
 
 ## Not Next
 

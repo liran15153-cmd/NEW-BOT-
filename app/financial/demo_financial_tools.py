@@ -10,6 +10,8 @@ from app.financial.financial_contracts import (
     OverdraftRiskResult,
     PurchaseSimulationInput,
     PurchaseSimulationResult,
+    UpcomingExpensesInput,
+    UpcomingExpensesResult,
     WeeklySpendInput,
     WeeklySpendResult,
 )
@@ -20,6 +22,11 @@ class DemoFinancialContext:
     current_balance_minor: int = 250000
     committed_expenses_minor: int = 180000
     safe_to_spend_minor: int = 50000
+    upcoming_expenses_next_7_days_minor: int = 65000
+    largest_upcoming_expense_minor: int = 45000
+    days_until_next_expense: int = 2
+    upcoming_expense_count: int = 3
+    upcoming_expense_lookahead_days: int = 7
     days_until_salary: int = 9
     expected_expenses_high: bool = True
     currency: Currency = Currency.ILS
@@ -78,6 +85,33 @@ class DemoFinancialTools:
             ),
             projected_balance_before_salary_minor=projected_balance,
             overdraft_gap_minor=max(0, -projected_balance),
+            days_until_salary=self._context.days_until_salary,
+            currency=self._context.currency,
+            expected_expenses_high=self._context.expected_expenses_high,
+        )
+
+    def upcoming_expenses(
+        self,
+        request: UpcomingExpensesInput,
+    ) -> UpcomingExpensesResult:
+        projected_balance = (
+            self._context.current_balance_minor
+            - self._context.upcoming_expenses_next_7_days_minor
+        )
+        return UpcomingExpensesResult(
+            current_balance_minor=self._context.current_balance_minor,
+            upcoming_expenses_next_7_days_minor=(
+                self._context.upcoming_expenses_next_7_days_minor
+            ),
+            largest_upcoming_expense_minor=(
+                self._context.largest_upcoming_expense_minor
+            ),
+            days_until_next_expense=self._context.days_until_next_expense,
+            upcoming_expense_count=self._context.upcoming_expense_count,
+            projected_balance_after_upcoming_minor=projected_balance,
+            available_buffer_until_salary_minor=self._context.available_buffer_minor,
+            safe_to_spend_minor=self._context.safe_to_spend_minor,
+            lookahead_days=self._context.upcoming_expense_lookahead_days,
             days_until_salary=self._context.days_until_salary,
             currency=self._context.currency,
             expected_expenses_high=self._context.expected_expenses_high,

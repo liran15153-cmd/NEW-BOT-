@@ -58,6 +58,25 @@ class OverdraftRiskResult(BaseModel):
     expected_expenses_high: bool
 
 
+class UpcomingExpensesInput(BaseModel):
+    user_id: str = Field(min_length=1)
+
+
+class UpcomingExpensesResult(BaseModel):
+    current_balance_minor: int
+    upcoming_expenses_next_7_days_minor: int
+    largest_upcoming_expense_minor: int
+    days_until_next_expense: int
+    upcoming_expense_count: int
+    projected_balance_after_upcoming_minor: int
+    available_buffer_until_salary_minor: int
+    safe_to_spend_minor: int
+    lookahead_days: int
+    days_until_salary: int
+    currency: Currency
+    expected_expenses_high: bool
+
+
 class PurchaseSimulationInput(BaseModel):
     user_id: str = Field(min_length=1)
     amount_minor: int = Field(gt=0)
@@ -110,6 +129,15 @@ class OverdraftRiskTool(Protocol):
 
 
 @runtime_checkable
+class UpcomingExpensesTool(Protocol):
+    def upcoming_expenses(
+        self,
+        request: UpcomingExpensesInput,
+    ) -> UpcomingExpensesResult:
+        ...
+
+
+@runtime_checkable
 class PurchaseSimulationTool(Protocol):
     def simulate_purchase(
         self,
@@ -132,9 +160,9 @@ class FinancialTools(
     CashflowStatusTool,
     WeeklySpendTool,
     OverdraftRiskTool,
+    UpcomingExpensesTool,
     PurchaseSimulationTool,
     InstallmentsSimulationTool,
     Protocol,
 ):
     pass
-

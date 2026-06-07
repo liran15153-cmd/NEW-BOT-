@@ -25,6 +25,7 @@ The current backend supports:
 - structured debug metadata for internal testing
 - deterministic weekly safe-spend projection from demo cash-flow facts
 - deterministic overdraft-risk projection before salary from demo cash-flow facts
+- deterministic upcoming-expense pressure from demo near-term commitments
 
 The current backend does not support:
 
@@ -53,7 +54,7 @@ The assistant should help a user understand a near-term financial decision in pl
 For the current backend, that means:
 
 ```txt
-The user can ask a simple cash-flow, weekly safe-spend, purchase, or installment question and receive a clear Hebrew response based on deterministic demo financial context.
+The user can ask a simple cash-flow, weekly safe-spend, overdraft-risk, upcoming-expense, purchase, or installment question and receive a clear Hebrew response based on deterministic demo financial context.
 ```
 
 The assistant should feel:
@@ -86,6 +87,7 @@ They want to ask:
 - How is my cash flow?
 - What can I safely spend this week?
 - Am I likely to enter overdraft before payday?
+- What payments are coming soon?
 - Can I buy this?
 - Can I buy this for a specific amount?
 - What happens if I split this purchase into payments?
@@ -205,7 +207,43 @@ Current default demo result:
 2500.00 ILS current balance - 1800.00 ILS committed expenses -> 700.00 ILS projected before salary; no projected overdraft, medium risk.
 ```
 
-### 4. Purchase Simulation
+### 4. Upcoming Expense Pressure
+
+User intent:
+
+```txt
+upcoming_expenses
+```
+
+Example user questions:
+
+```txt
+איזה תשלומים קרובים יש לי?
+איזה הוצאות קרובות יורדות השבוע?
+What payments are coming soon?
+```
+
+Expected behavior:
+
+- Return a Hebrew answer based on demo financial context.
+- Include total committed expenses in the next 7 days.
+- Include the number of upcoming charges, days until the next charge, and largest upcoming expense when available.
+- Compare the upcoming amount with the safe-to-spend amount through the decision engine.
+- Do not invent merchant names, subscription names, live transactions, or bank data.
+
+Current deterministic rule:
+
+```txt
+projected_balance_after_upcoming = current_balance - upcoming_expenses_next_7_days
+```
+
+Current default demo result:
+
+```txt
+650.00 ILS due in the next 7 days across 3 charges; largest charge is 450.00 ILS; next charge is in 2 days; projected balance after near-term commitments is 1850.00 ILS; medium risk.
+```
+
+### 5. Purchase Simulation
 
 User intent:
 
@@ -238,7 +276,7 @@ Expected behavior when amount is missing:
 
 The assistant should not answer only “yes” or “no” unless the structured decision makes that safe.
 
-### 5. Installment Simulation
+### 6. Installment Simulation
 
 User intent:
 
@@ -277,7 +315,7 @@ Important product rule:
 Installments can reduce short-term pressure but create future obligations. Do not present installments as automatically better.
 ```
 
-### 6. Unknown Or Unsupported Message
+### 7. Unknown Or Unsupported Message
 
 User intent:
 

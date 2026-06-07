@@ -9,6 +9,7 @@ from app.financial.financial_contracts import (
     OverdraftRiskResult,
     PurchaseSimulationResult,
     RiskLevel,
+    UpcomingExpensesResult,
     WeeklySpendResult,
 )
 from app.financial.financial_reason_codes import ReasonCode
@@ -60,6 +61,23 @@ class OverdraftRiskDecisionResult(BaseModel):
     recommended_action: RecommendedAction
 
 
+class UpcomingExpensesDecisionResult(BaseModel):
+    current_balance_minor: int
+    upcoming_expenses_next_7_days_minor: int
+    largest_upcoming_expense_minor: int
+    days_until_next_expense: int
+    upcoming_expense_count: int
+    projected_balance_after_upcoming_minor: int
+    available_buffer_until_salary_minor: int
+    safe_to_spend_minor: int
+    lookahead_days: int
+    days_until_salary: int
+    currency: Currency
+    risk_level: RiskLevel
+    reason_codes: list[ReasonCode]
+    recommended_action: RecommendedAction
+
+
 class PurchaseDecisionResult(BaseModel):
     can_purchase: bool
     amount_minor: int
@@ -89,6 +107,7 @@ DecisionResult = (
     CashflowDecisionResult
     | WeeklySpendDecisionResult
     | OverdraftRiskDecisionResult
+    | UpcomingExpensesDecisionResult
     | PurchaseDecisionResult
     | InstallmentsDecisionResult
 )
@@ -200,6 +219,35 @@ class FinancialDecisionEngine:
             risk_level=risk_level,
             reason_codes=reason_codes,
             recommended_action=_overdraft_action(risk_level),
+        )
+
+    def decide_upcoming_expenses(
+        self,
+        facts: UpcomingExpensesResult,
+    ) -> UpcomingExpensesDecisionResult:
+        reason_codes = _upcoming_expense_reason_codes(facts)
+        risk_level = _upcoming_expense_risk(facts)
+        return UpcomingExpensesDecisionResult(
+            current_balance_minor=facts.current_balance_minor,
+            upcoming_expenses_next_7_days_minor=(
+                facts.upcoming_expenses_next_7_days_minor
+            ),
+            largest_upcoming_expense_minor=facts.largest_upcoming_expense_minor,
+            days_until_next_expense=facts.days_until_next_expense,
+            upcoming_expense_count=facts.upcoming_expense_count,
+            projected_balance_after_upcoming_minor=(
+                facts.projected_balance_after_upcoming_minor
+            ),
+            available_buffer_until_salary_minor=(
+                facts.available_buffer_until_salary_minor
+            ),
+            safe_to_spend_minor=facts.safe_to_spend_minor,
+            lookahead_days=facts.lookahead_days,
+            days_until_salary=facts.days_until_salary,
+            currency=facts.currency,
+            risk_level=risk_level,
+            reason_codes=reason_codes,
+            recommended_action=_upcoming_expense_action(risk_level),
         )
 
     def decide_purchase(
@@ -339,6 +387,46 @@ def _overdraft_action(risk_level: RiskLevel) -> RecommendedAction:
     return RecommendedAction.PROCEED
 
 
+def _upcoming_expense_reason_codes(
+    facts: UpcomingExpensesResult,
+) -> list[ReasonCode]:
+    if facts.upcoming_expenses_next_7_days_minor <= 0:
+        return [ReasonCode.NO_UPCOMING_EXPENSE_PRESSURE]
+
+    reason_codes: list[ReasonCode] = []
+    if facts.days_until_next_expense <= facts.lookahead_days:
+        reason_codes.append(ReasonCode.UPCOMING_EXPENSES_DUE_SOON)
+    if facts.projected_balance_after_upcoming_minor < 0:
+        reason_codes.append(ReasonCode.PROJECTED_OVERDRAFT)
+    elif facts.upcoming_expenses_next_7_days_minor > facts.safe_to_spend_minor:
+        reason_codes.append(ReasonCode.UPCOMING_EXPENSES_EXCEED_SAFE_TO_SPEND)
+    if (
+        facts.expected_expenses_high
+        and facts.projected_balance_after_upcoming_minor >= 0
+    ):
+        reason_codes.append(ReasonCode.EXPECTED_EXPENSES_HIGH)
+    return reason_codes
+
+
+def _upcoming_expense_risk(facts: UpcomingExpensesResult) -> RiskLevel:
+    if facts.projected_balance_after_upcoming_minor < 0:
+        return RiskLevel.HIGH
+    if (
+        facts.expected_expenses_high
+        or facts.upcoming_expenses_next_7_days_minor > facts.safe_to_spend_minor
+    ):
+        return RiskLevel.MEDIUM
+    return RiskLevel.LOW
+
+
+def _upcoming_expense_action(risk_level: RiskLevel) -> RecommendedAction:
+    if risk_level == RiskLevel.HIGH:
+        return RecommendedAction.REDUCE_SPENDING
+    if risk_level == RiskLevel.MEDIUM:
+        return RecommendedAction.LIMIT_TO_SAFE_AMOUNT
+    return RecommendedAction.PROCEED
+
+
 def _purchase_action(
     can_purchase: bool,
     amount_minor: int,
@@ -352,4 +440,3 @@ def _purchase_action(
     if risk_level != RiskLevel.LOW:
         return RecommendedAction.WAIT
     return RecommendedAction.PROCEED
-

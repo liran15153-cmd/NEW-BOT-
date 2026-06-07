@@ -4,6 +4,7 @@
     InstallmentsSimulationResult,
     OverdraftRiskResult,
     PurchaseSimulationResult,
+    UpcomingExpensesResult,
     WeeklySpendResult,
 )
 from app.financial.financial_decision_engine import FinancialDecisionEngine, RecommendedAction
@@ -185,3 +186,60 @@ def test_overdraft_risk_decision_reduces_spending_when_projection_is_negative() 
     assert decision.reason_codes == [ReasonCode.PROJECTED_OVERDRAFT]
     assert decision.recommended_action == RecommendedAction.REDUCE_SPENDING
 
+
+def test_upcoming_expenses_decision_flags_due_soon_pressure() -> None:
+    decision = FinancialDecisionEngine().decide_upcoming_expenses(
+        UpcomingExpensesResult(
+            current_balance_minor=250000,
+            upcoming_expenses_next_7_days_minor=65000,
+            largest_upcoming_expense_minor=45000,
+            days_until_next_expense=2,
+            upcoming_expense_count=3,
+            projected_balance_after_upcoming_minor=185000,
+            available_buffer_until_salary_minor=70000,
+            safe_to_spend_minor=50000,
+            lookahead_days=7,
+            days_until_salary=9,
+            currency=Currency.ILS,
+            expected_expenses_high=True,
+        )
+    )
+
+    assert decision.upcoming_expenses_next_7_days_minor == 65000
+    assert decision.largest_upcoming_expense_minor == 45000
+    assert decision.projected_balance_after_upcoming_minor == 185000
+    assert decision.risk_level == "medium"
+    assert decision.reason_codes == [
+        ReasonCode.UPCOMING_EXPENSES_DUE_SOON,
+        ReasonCode.UPCOMING_EXPENSES_EXCEED_SAFE_TO_SPEND,
+        ReasonCode.EXPECTED_EXPENSES_HIGH,
+    ]
+    assert decision.recommended_action == RecommendedAction.LIMIT_TO_SAFE_AMOUNT
+    assert "answer" not in type(decision).model_fields
+
+
+def test_upcoming_expenses_decision_reduces_spending_when_near_term_balance_goes_negative() -> None:
+    decision = FinancialDecisionEngine().decide_upcoming_expenses(
+        UpcomingExpensesResult(
+            current_balance_minor=30000,
+            upcoming_expenses_next_7_days_minor=45000,
+            largest_upcoming_expense_minor=45000,
+            days_until_next_expense=1,
+            upcoming_expense_count=1,
+            projected_balance_after_upcoming_minor=-15000,
+            available_buffer_until_salary_minor=-15000,
+            safe_to_spend_minor=0,
+            lookahead_days=7,
+            days_until_salary=6,
+            currency=Currency.ILS,
+            expected_expenses_high=False,
+        )
+    )
+
+    assert decision.projected_balance_after_upcoming_minor == -15000
+    assert decision.risk_level == "high"
+    assert decision.reason_codes == [
+        ReasonCode.UPCOMING_EXPENSES_DUE_SOON,
+        ReasonCode.PROJECTED_OVERDRAFT,
+    ]
+    assert decision.recommended_action == RecommendedAction.REDUCE_SPENDING

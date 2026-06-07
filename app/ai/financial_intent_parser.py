@@ -43,6 +43,18 @@ _OVERDRAFT_RISK_KEYWORDS = (
     "negative balance",
     "below zero",
 )
+_UPCOMING_EXPENSES_KEYWORDS = (
+    "תשלומים קרובים",
+    "הוצאות קרובות",
+    "חיובים קרובים",
+    "יורדות השבוע",
+    "יורד בקרוב",
+    "מה יורד",
+    "upcoming payments",
+    "upcoming expenses",
+    "payments are coming soon",
+    "coming soon",
+)
 _CASHFLOW_KEYWORDS = (
     "תזרים",
     "יתרה",
@@ -61,6 +73,14 @@ _CASHFLOW_KEYWORDS = (
 
 def parse_intent(message: str) -> IntentParseResult:
     normalized = message.strip().casefold()
+
+    if _contains_any(normalized, _UPCOMING_EXPENSES_KEYWORDS):
+        return IntentParseResult(
+            intent="upcoming_expenses",
+            confidence=0.86,
+            matched_rule="upcoming_expenses_keyword",
+            normalized_message=normalized,
+        )
 
     if _contains_any(normalized, _INSTALLMENT_KEYWORDS):
         return IntentParseResult(

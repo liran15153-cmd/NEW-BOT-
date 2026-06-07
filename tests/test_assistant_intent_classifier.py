@@ -9,6 +9,7 @@ def test_assistant_intents_map_only_supported_flows_to_executable_intents() -> N
     assert executable_intent_for(AssistantIntent.CASHFLOW_STATUS) == "cashflow_status"
     assert executable_intent_for(AssistantIntent.WEEKLY_SAFE_SPEND) == "weekly_spend"
     assert executable_intent_for(AssistantIntent.OVERDRAFT_RISK) == "overdraft_risk"
+    assert executable_intent_for(AssistantIntent.UPCOMING_EXPENSES) == "upcoming_expenses"
     assert executable_intent_for(AssistantIntent.AFFORDABILITY_CHECK) == "simulate_purchase"
     assert (
         executable_intent_for(AssistantIntent.PAYMENT_SPLIT_SIMULATION)
@@ -118,6 +119,17 @@ def test_classifier_detects_overdraft_risk_before_generic_payday() -> None:
     assert (
         classify_assistant_intent("am I likely to enter overdraft before payday?")
         == AssistantIntent.OVERDRAFT_RISK
+    )
+
+
+def test_classifier_detects_upcoming_expenses_before_generic_budget() -> None:
+    assert (
+        classify_assistant_intent("איזה תשלומים קרובים יש לי השבוע?")
+        == AssistantIntent.UPCOMING_EXPENSES
+    )
+    assert (
+        classify_assistant_intent("what payments are coming soon?")
+        == AssistantIntent.UPCOMING_EXPENSES
     )
 
 

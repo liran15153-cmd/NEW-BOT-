@@ -9,6 +9,7 @@ _PROJECTION_INTENTS = {
     AssistantIntent.CASHFLOW_STATUS,
     AssistantIntent.WEEKLY_SAFE_SPEND,
     AssistantIntent.OVERDRAFT_RISK,
+    AssistantIntent.UPCOMING_EXPENSES,
     AssistantIntent.AFFORDABILITY_CHECK,
     AssistantIntent.PAYMENT_SPLIT_SIMULATION,
 }
@@ -42,6 +43,7 @@ def evaluate_financial_context_readiness(
         has_balance=has_balance,
         has_salary=has_salary,
         has_transactions=has_transactions,
+        has_upcoming_expenses=summary.has_upcoming_expenses is True,
         assistant_intent=assistant_intent,
     )
     level = _readiness_level(
@@ -117,6 +119,7 @@ def _missing_fields(
     has_balance: bool,
     has_salary: bool,
     has_transactions: bool,
+    has_upcoming_expenses: bool,
     assistant_intent: AssistantIntent | None,
 ) -> list[str]:
     missing_fields: list[str] = []
@@ -127,6 +130,11 @@ def _missing_fields(
             missing_fields.append("current_balance")
         if not has_salary:
             missing_fields.append("next_salary_date")
+    if (
+        assistant_intent == AssistantIntent.UPCOMING_EXPENSES
+        and not has_upcoming_expenses
+    ):
+        missing_fields.append("upcoming_expenses")
     return missing_fields
 
 
@@ -158,6 +166,8 @@ def _can_answer(
     if level == DataReadinessLevel.NONE:
         return False
     if assistant_intent in _PROJECTION_INTENTS and missing_fields:
+        if assistant_intent == AssistantIntent.UPCOMING_EXPENSES:
+            return False
         return level == DataReadinessLevel.MEDIUM and missing_fields == [
             "current_balance"
         ]

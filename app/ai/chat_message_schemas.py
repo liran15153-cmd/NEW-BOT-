@@ -14,6 +14,7 @@ IntentName = Literal[
     "cashflow_status",
     "weekly_spend",
     "overdraft_risk",
+    "upcoming_expenses",
     "simulate_purchase",
     "simulate_installments",
     "affordability_check",
@@ -90,4 +91,3 @@ class ChatMessageResponse(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
     missing_fields: list[str]
     debug: ChatDebugInfo
-

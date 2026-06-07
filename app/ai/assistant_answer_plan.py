@@ -22,6 +22,7 @@ _PROJECTION_INTENTS = {
     AssistantIntent.CASHFLOW_STATUS,
     AssistantIntent.WEEKLY_SAFE_SPEND,
     AssistantIntent.OVERDRAFT_RISK,
+    AssistantIntent.UPCOMING_EXPENSES,
     AssistantIntent.AFFORDABILITY_CHECK,
     AssistantIntent.PAYMENT_SPLIT_SIMULATION,
 }

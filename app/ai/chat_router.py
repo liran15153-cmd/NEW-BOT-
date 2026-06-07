@@ -225,6 +225,8 @@ def _assistant_intent_for_resolved_intent(intent: IntentName) -> AssistantIntent
         return AssistantIntent.WEEKLY_SAFE_SPEND
     if intent == "overdraft_risk":
         return AssistantIntent.OVERDRAFT_RISK
+    if intent == "upcoming_expenses":
+        return AssistantIntent.UPCOMING_EXPENSES
     if intent == "simulate_purchase":
         return AssistantIntent.AFFORDABILITY_CHECK
     if intent == "simulate_installments":
@@ -241,4 +243,3 @@ def _demo_financial_context_summary() -> dict[str, bool]:
         "has_upcoming_expenses": True,
         "has_live_bank_data": False,
     }
-

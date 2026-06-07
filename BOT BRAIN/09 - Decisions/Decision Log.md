@@ -16,6 +16,7 @@ source: docs
 - Keep final Hebrew copy centralized in `hebrew_response_builder.py`.
 - Support weekly safe-spend as a deterministic projection before richer data infrastructure.
 - Support overdraft risk before salary as a deterministic projection from demo cash-flow facts.
+- Support upcoming-expense pressure as deterministic demo commitments without merchant names.
 - Use in-memory state only for short clarification flows.
 - Recognize unsupported and future intents without pretending they are implemented.
 - Keep tests as architecture guardrails.
@@ -35,6 +36,10 @@ Overdraft risk before salary: This is a core employee question and can be
 answered honestly from existing demo facts without new infrastructure. The
 decision separates "no projected overdraft" from "low risk" so expected expense
 pressure can still produce a cautious answer.
+
+Upcoming expense pressure: This answers a concrete "what is coming soon?"
+question without pretending to analyze transaction history. The current contract
+uses generic committed totals and timing, not merchant names or subscriptions.
 
 Centralized Hebrew copy: The product is Hebrew-facing, so answer quality needs one obvious ownership point. Scattered copy would make QA and tone control harder.
 

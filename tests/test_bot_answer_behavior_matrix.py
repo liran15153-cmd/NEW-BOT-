@@ -9,6 +9,7 @@ from app.main import create_app
 HE_CASHFLOW = "\u05db\u05de\u05d4 \u05e0\u05e9\u05d0\u05e8 \u05dc\u05d9 \u05e2\u05d3 \u05d4\u05de\u05e9\u05db\u05d5\u05e8\u05ea?"
 HE_WEEKLY_SPEND = "\u05db\u05de\u05d4 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05d4\u05d5\u05e6\u05d9\u05d0 \u05d4\u05e9\u05d1\u05d5\u05e2?"
 HE_OVERDRAFT_RISK = "\u05d4\u05d0\u05dd \u05d0\u05e0\u05d9 \u05d0\u05db\u05e0\u05e1 \u05dc\u05de\u05d9\u05e0\u05d5\u05e1 \u05dc\u05e4\u05e0\u05d9 \u05d4\u05de\u05e9\u05db\u05d5\u05e8\u05ea?"
+HE_UPCOMING_EXPENSES = "\u05d0\u05d9\u05d6\u05d4 \u05ea\u05e9\u05dc\u05d5\u05de\u05d9\u05dd \u05e7\u05e8\u05d5\u05d1\u05d9\u05dd \u05d9\u05e9 \u05dc\u05d9?"
 HE_PURCHASE_AMOUNT = "\u05d0\u05e4\u05e9\u05e8 \u05dc\u05e7\u05e0\u05d5\u05ea \u05d0\u05d5\u05d6\u05e0\u05d9\u05d5\u05ea \u05d1-400 \u05e9\u05e7\u05dc?"
 HE_PURCHASE_NO_AMOUNT = "\u05d0\u05e4\u05e9\u05e8 \u05dc\u05e7\u05e0\u05d5\u05ea \u05d0\u05ea \u05d6\u05d4?"
 HE_INSTALLMENTS_FULL = "\u05de\u05d4 \u05d9\u05e7\u05e8\u05d4 \u05d0\u05dd \u05d0\u05e4\u05e8\u05d5\u05e1 900 \u05e9\u05e7\u05dc \u05dc-3 \u05ea\u05e9\u05dc\u05d5\u05de\u05d9\u05dd?"
@@ -63,6 +64,18 @@ def test_supported_answer_matrix_uses_tools_and_policy_metadata() -> None:
             "intent": "overdraft_risk",
             "assistant_intent": "overdraft_risk",
             "tool_called": "overdraft_risk",
+        },
+        {
+            "message": HE_UPCOMING_EXPENSES,
+            "intent": "upcoming_expenses",
+            "assistant_intent": "upcoming_expenses",
+            "tool_called": "upcoming_expenses",
+        },
+        {
+            "message": "What payments are coming soon?",
+            "intent": "upcoming_expenses",
+            "assistant_intent": "upcoming_expenses",
+            "tool_called": "upcoming_expenses",
         },
         {
             "message": HE_PURCHASE_AMOUNT,
@@ -271,6 +284,13 @@ def test_hebrew_answer_quality_matrix_is_specific_and_useful() -> None:
             "message": HE_OVERDRAFT_RISK,
         }
     )
+    upcoming = _post(
+        {
+            "user_id": "matrix_user",
+            "session_id": "quality_upcoming",
+            "message": HE_UPCOMING_EXPENSES,
+        }
+    )
     installments = _post(
         {
             "user_id": "matrix_user",
@@ -312,6 +332,8 @@ def test_hebrew_answer_quality_matrix_is_specific_and_useful() -> None:
     assert "\u05d4\u05e9\u05d1\u05d5\u05e2" in weekly_spend["answer"]
     assert "700" in overdraft["answer"]
     assert "\u05de\u05d9\u05e0\u05d5\u05e1" in overdraft["answer"]
+    assert "650" in upcoming["answer"]
+    assert "\u05e7\u05e8\u05d5\u05d1\u05d5\u05ea" in upcoming["answer"]
     assert "\u05d4\u05ea\u05d7\u05d9\u05d9\u05d1\u05d5\u05ea" in installments["answer"]
     assert "\u05ea\u05d6\u05e8\u05d9\u05dd" in unknown["answer"]
     assert "\u05e7\u05e0\u05d9\u05d9\u05d4" in unknown["answer"]

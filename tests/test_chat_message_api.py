@@ -96,6 +96,30 @@ def test_overdraft_risk_question_returns_deterministic_projection() -> None:
     _assert_hebrew_answer(body["answer"])
 
 
+def test_upcoming_expenses_question_returns_deterministic_pressure() -> None:
+    response = post_json(
+        "/chat/message",
+        {
+            "user_id": "user_123",
+            "message": "איזה תשלומים קרובים יש לי?",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["intent"] == "upcoming_expenses"
+    assert body["status"] == "answered"
+    assert body["tool_called"] == "upcoming_expenses"
+    assert body["confidence"] == 0.86
+    assert body["missing_fields"] == []
+    assert body["debug"]["tool_executed"] is True
+    assert body["debug"]["assistant_intent"] == "upcoming_expenses"
+    assert body["debug"]["risk_level"] == "medium"
+    assert "650" in body["answer"]
+    assert "קרובות" in body["answer"]
+    _assert_hebrew_answer(body["answer"])
+
+
 def test_hebrew_purchase_question_with_shekel_symbol_maps_to_simulate_purchase() -> None:
     response = post_json(
         "/chat/message",
@@ -262,4 +286,3 @@ def test_chat_message_requires_non_empty_user_id_and_message() -> None:
     )
 
     assert response.status_code == 422
-

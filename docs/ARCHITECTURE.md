@@ -22,6 +22,7 @@ The backend currently supports:
 - a deterministic financial decision engine
 - deterministic weekly safe-spend projection from demo cash-flow facts
 - deterministic overdraft-risk projection before salary from demo cash-flow facts
+- deterministic upcoming-expense pressure from demo near-term commitments
 - Hebrew user-facing responses
 - pytest coverage for API behavior, bot behavior, dialogue state, financial contracts, architecture boundaries, and audit checks
 
@@ -302,6 +303,7 @@ Current executable financial intents:
 cashflow_status
 weekly_spend
 overdraft_risk
+upcoming_expenses
 simulate_purchase
 simulate_installments
 ```
@@ -315,6 +317,11 @@ expenses until salary. It must report the projected balance before salary and an
 overdraft gap only when the projection is negative. A positive projection with
 high expected expenses can still be medium risk; do not collapse that into a
 simple yes/no answer.
+
+`upcoming_expenses` reports near-term committed expenses from demo facts. It
+must expose totals, count, next due timing, largest upcoming expense, projected
+balance after those near-term commitments, and risk metadata. It must not invent
+merchant names, subscription labels, or transaction history.
 
 ## Financial Model Rules
 
@@ -512,4 +519,3 @@ These are intentionally unresolved and should not be guessed by coding agents:
 8. Which production messaging channel comes first?
 9. When is a real LLM useful enough to justify the added privacy and reliability risk?
 10. What accuracy threshold is required for recurring-payment detection?
-

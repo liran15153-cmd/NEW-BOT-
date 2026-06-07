@@ -24,6 +24,8 @@ For `Can I buy headphones for 400 shekels?`, the system classifies affordability
 
 For `Am I likely to enter overdraft before payday?`, the system classifies overdraft risk, executes the demo overdraft-risk tool, projects balance before salary, passes the facts into the decision engine, and returns a Hebrew answer with no invented live-bank data.
 
+For `What payments are coming soon?`, the system classifies upcoming expenses, executes the demo upcoming-expenses tool, summarizes near-term committed totals and timing, passes the facts into the decision engine, and returns a Hebrew answer without inventing merchant names.
+
 For `Should I take a loan to buy this?`, the system classifies unsupported loan advice, skips financial tools, and returns a safe policy response with `debug.tool_executed = false`.
 
 ## Hard Boundaries

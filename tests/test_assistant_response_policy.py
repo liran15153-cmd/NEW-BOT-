@@ -165,6 +165,42 @@ def test_overdraft_risk_with_full_context_is_cautious_estimate() -> None:
     assert decision.must_include_uncertainty is True
 
 
+def test_upcoming_expenses_with_full_context_is_cautious_estimate() -> None:
+    decision = decide_response_policy(
+        user_message="what payments are coming soon?",
+        assistant_intent=AssistantIntent.UPCOMING_EXPENSES,
+        financial_context_summary={
+            "has_transactions": True,
+            "has_current_balance": True,
+            "has_salary_date": True,
+            "has_recurring_expenses": True,
+            "has_upcoming_expenses": True,
+            "has_live_bank_data": False,
+        },
+    )
+
+    assert decision.allowed is True
+    assert decision.response_type == ResponseType.CAUTIOUS_ESTIMATE
+    assert decision.must_include_uncertainty is True
+
+
+def test_upcoming_expenses_without_upcoming_expense_context_asks_for_missing_data() -> None:
+    decision = decide_response_policy(
+        user_message="what payments are coming soon?",
+        assistant_intent=AssistantIntent.UPCOMING_EXPENSES,
+        financial_context_summary={
+            "has_transactions": True,
+            "has_current_balance": True,
+            "has_salary_date": True,
+            "has_live_bank_data": False,
+        },
+    )
+
+    assert decision.allowed is True
+    assert decision.response_type == ResponseType.ASK_FOR_MISSING_DATA
+    assert decision.missing_fields == ["upcoming_expenses"]
+
+
 def test_import_warnings_force_uncertainty() -> None:
     decision = decide_response_policy(
         user_message="can I afford it?",

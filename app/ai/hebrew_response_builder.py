@@ -17,6 +17,7 @@ from app.financial.financial_decision_engine import (
     InstallmentsDecisionResult,
     OverdraftRiskDecisionResult,
     PurchaseDecisionResult,
+    UpcomingExpensesDecisionResult,
     WeeklySpendDecisionResult,
 )
 from app.financial.financial_reason_codes import ReasonCode
@@ -339,6 +340,7 @@ def _answered_text(
         CashflowDecisionResult
         | WeeklySpendDecisionResult
         | OverdraftRiskDecisionResult
+        | UpcomingExpensesDecisionResult
         | PurchaseDecisionResult
         | InstallmentsDecisionResult
         | None
@@ -389,6 +391,43 @@ def _answered_text(
             "אחרי ההוצאות המחויבות צפויה להישאר יתרה של "
             f"{_format_minor(result.projected_balance_before_salary_minor)}. "
             f"{risk_note}"
+            f"רמת הסיכון: {_risk_label(result.risk_level)}."
+        )
+
+    if isinstance(result, UpcomingExpensesDecisionResult):
+        if result.upcoming_expenses_next_7_days_minor <= 0:
+            return (
+                "לפי נתוני הדמו, אין הוצאות מחויבות קרובות ב-"
+                f"{result.lookahead_days} הימים הקרובים. "
+                f"רמת הסיכון: {_risk_label(result.risk_level)}."
+            )
+        if result.projected_balance_after_upcoming_minor < 0:
+            return (
+                "לפי נתוני הדמו, ההוצאות הקרובות יוצרות לחץ גבוה. "
+                f"ב-{result.lookahead_days} הימים הקרובים צפויים "
+                f"{_format_minor(result.upcoming_expenses_next_7_days_minor)} "
+                "בהוצאות מחויבות, וזה עלול להוריד את היתרה מתחת לאפס. "
+                "עדיף לצמצם הוצאות לא הכרחיות עד שהחיובים יעברו. "
+                f"רמת הסיכון: {_risk_label(result.risk_level)}."
+            )
+        pressure_note = (
+            "הסכום הזה גבוה מהסכום הבטוח להוצאה, אז כדאי להגביל קניות "
+            "לא הכרחיות עד שהחיובים יעברו. "
+            if ReasonCode.UPCOMING_EXPENSES_EXCEED_SAFE_TO_SPEND
+            in result.reason_codes
+            else ""
+        )
+        return (
+            "לפי נתוני הדמו, ב-"
+            f"{result.lookahead_days} הימים הקרובים צפויות הוצאות מחויבות של "
+            f"{_format_minor(result.upcoming_expenses_next_7_days_minor)} "
+            f"ב-{result.upcoming_expense_count} חיובים. "
+            f"החיוב הבא צפוי בעוד {result.days_until_next_expense} ימים, "
+            "והחיוב הגדול ביותר הוא "
+            f"{_format_minor(result.largest_upcoming_expense_minor)}. "
+            "אחרי ההוצאות הקרובות צפויה להישאר יתרה של "
+            f"{_format_minor(result.projected_balance_after_upcoming_minor)}. "
+            f"{pressure_note}"
             f"רמת הסיכון: {_risk_label(result.risk_level)}."
         )
 

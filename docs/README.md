@@ -25,6 +25,7 @@ The backend currently supports:
 - deterministic financial decision engine
 - deterministic weekly safe-spend projection from demo cash-flow facts
 - deterministic overdraft-risk projection before salary from demo cash-flow facts
+- deterministic upcoming-expense pressure from demo near-term commitments
 - Hebrew user-facing answers
 - internal debug metadata for testing
 - pytest coverage for API, bot, dialogue, financial contracts, architecture, and
@@ -110,6 +111,7 @@ Missing-field and unknown-intent cases must not call financial tools.
 cashflow_status
 weekly_spend
 overdraft_risk
+upcoming_expenses
 simulate_purchase
 simulate_installments
 privacy_question
@@ -180,6 +182,27 @@ With the default demo facts, `2500.00 ILS` current balance minus `1800.00 ILS`
 committed expenses leaves `700.00 ILS` projected before salary, so no overdraft
 is currently projected, but the risk remains medium because expected expenses
 are high and there are 9 days until salary.
+
+## Upcoming Expense Pressure
+
+The backend supports questions such as:
+
+```text
+איזה תשלומים קרובים יש לי?
+What payments are coming soon?
+```
+
+The current demo tool reports near-term committed expenses without pretending to
+have merchant names or live transaction history. It returns the total upcoming
+expense amount in the next 7 days, the largest upcoming expense, days until the
+next expense, projected balance after those near-term commitments, and risk
+metadata.
+
+With the default demo facts, the next 7 days include `650.00 ILS` in committed
+expenses across 3 charges. The largest is `450.00 ILS`, the next charge is due
+in 2 days, and the projected balance after near-term commitments is
+`1850.00 ILS`. Because the upcoming amount exceeds the current safe-to-spend
+amount, the decision remains medium risk.
 
 ## Setup
 

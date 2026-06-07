@@ -13,6 +13,7 @@ source: code
 - `CashflowStatusInput` -> `CashflowStatusResult`
 - `WeeklySpendInput` -> `WeeklySpendResult`
 - `OverdraftRiskInput` -> `OverdraftRiskResult`
+- `UpcomingExpensesInput` -> `UpcomingExpensesResult`
 - `PurchaseSimulationInput` -> `PurchaseSimulationResult`
 - `InstallmentsSimulationInput` -> `InstallmentsSimulationResult`
 
@@ -25,6 +26,13 @@ are facts for the response builder; they are not user-facing prose.
 projected balance before salary, overdraft gap, days until salary, currency, and
 expected-expense pressure. It is still a deterministic projection from available
 facts, not a final answer string.
+
+`UpcomingExpensesResult` carries current balance, total committed expenses in
+the next 7 days, largest upcoming expense, days until the next expense, number
+of upcoming charges, projected balance after near-term commitments, available
+buffer until salary, safe-to-spend amount, lookahead days, salary distance, and
+expected-expense pressure. It does not carry merchant names or transaction
+history.
 
 ## Design Rule
 

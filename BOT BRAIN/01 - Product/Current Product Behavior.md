@@ -13,6 +13,7 @@ The backend supports a narrow but valuable set of financial wellness conversatio
 - `cashflow_status`: answer how much buffer remains until salary day.
 - `weekly_spend`: estimate what can safely be spent this week from demo facts.
 - `overdraft_risk`: project whether committed expenses put the user below zero before salary.
+- `upcoming_expenses`: summarize near-term committed expenses from demo facts.
 - `simulate_purchase`: check whether a specific purchase fits the demo buffer.
 - `simulate_installments`: estimate monthly payment impact for installments.
 - `privacy_question`: explain current and future privacy boundaries.
@@ -21,7 +22,7 @@ The backend supports a narrow but valuable set of financial wellness conversatio
 
 ## Behavior By Scenario
 
-Cash-flow questions should explain available buffer, safe-to-spend amount, days until salary, and risk level when those values exist. Weekly safe-spend questions should give a conservative cap for the next 7 days, calculated from the safe-to-spend amount until salary and rounded down in minor units. Overdraft-risk questions should project the balance before salary from current balance minus committed expenses, report an overdraft gap only when negative, and keep "not projected to enter overdraft" separate from "low risk". Purchase questions should never answer only "yes" or "no"; they should explain whether the purchase is safe, tight, or not recommended. Installment questions should mention monthly payment impact and avoid presenting installments as automatically better.
+Cash-flow questions should explain available buffer, safe-to-spend amount, days until salary, and risk level when those values exist. Weekly safe-spend questions should give a conservative cap for the next 7 days, calculated from the safe-to-spend amount until salary and rounded down in minor units. Overdraft-risk questions should project the balance before salary from current balance minus committed expenses, report an overdraft gap only when negative, and keep "not projected to enter overdraft" separate from "low risk". Upcoming-expense questions should report near-term committed totals, next due timing, largest upcoming expense, projected balance after those commitments, and risk level without inventing merchant names. Purchase questions should never answer only "yes" or "no"; they should explain whether the purchase is safe, tight, or not recommended. Installment questions should mention monthly payment impact and avoid presenting installments as automatically better.
 
 Privacy questions should answer the user's concern directly. The current system has no employer-facing layer and no real user financial data. Future employer analytics, if ever built, must be aggregated and anonymized.
 

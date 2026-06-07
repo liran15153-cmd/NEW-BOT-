@@ -8,6 +8,7 @@ from app.financial.financial_contracts import (
     OverdraftRiskInput,
     PurchaseSimulationInput,
     RiskLevel,
+    UpcomingExpensesInput,
     WeeklySpendInput,
 )
 from app.financial.financial_decision_engine import DecisionResult, FinancialDecisionEngine
@@ -49,6 +50,13 @@ def execute_tool(
         return _executed(
             "overdraft_risk",
             decision_engine.decide_overdraft_risk(facts),
+        )
+
+    if intent == "upcoming_expenses":
+        facts = tools.upcoming_expenses(UpcomingExpensesInput(user_id=user_id))
+        return _executed(
+            "upcoming_expenses",
+            decision_engine.decide_upcoming_expenses(facts),
         )
 
     if intent == "simulate_purchase":
@@ -101,4 +109,3 @@ def _executed(
         risk_level=result.risk_level,
         reason_codes=result.reason_codes,
     )
-

@@ -26,6 +26,12 @@ They also support overdraft-risk projection before salary:
 projected, but expected expenses are still high, so the decision remains medium
 risk.
 
+They also support upcoming-expense pressure:
+`650.00 ILS` in committed expenses across 3 generic charges is expected in the
+next 7 days. The largest upcoming expense is `450.00 ILS`, the next charge is in
+2 days, and the projected balance after near-term commitments is `1850.00 ILS`.
+These are generic demo commitments, not merchant-level transaction history.
+
 Demo context is not a toy if it is used correctly. It is the contract rehearsal for production data.
 
 ## Product Wording Rule

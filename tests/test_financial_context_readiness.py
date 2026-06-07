@@ -82,6 +82,37 @@ def test_overdraft_risk_requires_balance_and_salary_context() -> None:
     assert result.missing_fields == ["current_balance", "next_salary_date"]
 
 
+def test_upcoming_expenses_requires_upcoming_expense_context() -> None:
+    result = evaluate_financial_context_readiness(
+        {
+            "has_transactions": True,
+            "has_current_balance": True,
+            "has_salary_date": True,
+        },
+        assistant_intent=AssistantIntent.UPCOMING_EXPENSES,
+    )
+
+    assert result.level == DataReadinessLevel.MEDIUM
+    assert result.can_answer is False
+    assert result.missing_fields == ["upcoming_expenses"]
+
+
+def test_upcoming_expenses_with_full_context_can_answer_as_estimate() -> None:
+    result = evaluate_financial_context_readiness(
+        {
+            "has_transactions": True,
+            "has_current_balance": True,
+            "has_salary_date": True,
+            "has_upcoming_expenses": True,
+        },
+        assistant_intent=AssistantIntent.UPCOMING_EXPENSES,
+    )
+
+    assert result.can_answer is True
+    assert result.must_include_uncertainty is True
+    assert result.missing_fields == []
+
+
 def test_import_warnings_and_duplicates_force_uncertainty() -> None:
     result = evaluate_financial_context_readiness(
         {
