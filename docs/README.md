@@ -16,6 +16,7 @@ The backend currently supports:
 - local browser tester at `GET /tester`
 - deterministic intent parsing
 - deterministic amount and installment extraction
+- conservative installment monthly-payment calculation
 - short in-memory multi-turn dialogue
 - assistant response policy and data-readiness checks
 - structured Pydantic request and response schemas
@@ -267,6 +268,10 @@ for 3 months
 
 Invalid values such as negative amounts, zero amounts, and zero installment
 months should not execute financial tools.
+
+Installment simulations round the monthly payment up to the nearest minor
+currency unit when the amount does not divide evenly across the number of
+payments. This keeps affordability checks from understating future obligations.
 
 ## Architecture Rules
 

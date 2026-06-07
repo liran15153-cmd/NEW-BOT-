@@ -109,3 +109,18 @@ def test_demo_installment_simulation_returns_monthly_payment_context() -> None:
     assert not hasattr(result, "risk_level")
 
 
+def test_demo_installment_simulation_rounds_monthly_payment_up() -> None:
+    tools = DemoFinancialTools()
+
+    result = tools.simulate_installments(
+        InstallmentsSimulationInput(
+            user_id="user_123",
+            amount_minor=10000,
+            months=3,
+        )
+    )
+
+    assert result.monthly_payment_minor == 3334
+    assert result.buffer_after_monthly_payment_minor == 66666
+
+

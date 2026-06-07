@@ -59,7 +59,7 @@ class DemoFinancialTools:
         self,
         request: InstallmentsSimulationInput,
     ) -> InstallmentsSimulationResult:
-        monthly_payment_minor = request.amount_minor // request.months
+        monthly_payment_minor = _ceil_divide_minor(request.amount_minor, request.months)
         available_buffer = self._context.available_buffer_minor
 
         return InstallmentsSimulationResult(
@@ -72,5 +72,9 @@ class DemoFinancialTools:
             buffer_after_monthly_payment_minor=available_buffer - monthly_payment_minor,
             days_until_salary=self._context.days_until_salary,
         )
+
+
+def _ceil_divide_minor(amount_minor: int, parts: int) -> int:
+    return -(-amount_minor // parts)
 
 

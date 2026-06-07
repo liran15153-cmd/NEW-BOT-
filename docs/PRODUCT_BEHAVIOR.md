@@ -180,6 +180,9 @@ Expected behavior when amount and months exist:
 - Extract amount.
 - Extract installment months.
 - Calculate monthly payment impact from structured facts.
+- When an amount does not divide evenly across installments, round the monthly
+  payment up to the nearest minor currency unit so the assistant does not
+  understate the obligation.
 - Return a Hebrew answer.
 
 Expected behavior when required fields are missing:
