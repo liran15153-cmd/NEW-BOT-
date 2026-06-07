@@ -47,6 +47,7 @@ def test_decision_engine_contains_no_user_facing_copy() -> None:
 def test_python_module_names_are_descriptive() -> None:
     expected_paths = {
         Path("app/api/chat_message_api.py"),
+        Path("app/api/financial_profile_api.py"),
         Path("app/api/health_check_api.py"),
         Path("app/api/local_tester_api.py"),
         Path("app/ai/assistant_answer_plan.py"),
@@ -67,17 +68,20 @@ def test_python_module_names_are_descriptive() -> None:
         Path("app/financial/financial_contracts.py"),
         Path("app/financial/financial_decision_engine.py"),
         Path("app/financial/financial_reason_codes.py"),
+        Path("app/financial/user_financial_profile.py"),
         Path("tests/api_test_client.py"),
         Path("tests/test_architecture_boundaries.py"),
         Path("tests/test_chat_message_api.py"),
         Path("tests/test_conversation_state.py"),
         Path("tests/test_financial_decision_engine.py"),
+        Path("tests/test_financial_profile_api.py"),
         Path("tests/test_financial_intent_and_parameter_parsing.py"),
         Path("tests/test_financial_tool_contracts.py"),
         Path("tests/test_health_check_api.py"),
         Path("tests/test_local_tester_app.py"),
         Path("tests/test_multiturn_conversation_flows.py"),
         Path("tests/test_system_audit_checks.py"),
+        Path("tests/test_user_financial_tools.py"),
     }
 
     for path in expected_paths:

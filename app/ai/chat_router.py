@@ -11,6 +11,7 @@ from app.ai.financial_intent_parser import parse_intent
 from app.ai.financial_parameter_extractor import extract_parameters
 from app.ai.hebrew_response_builder import (
     build_answered_response,
+    build_financial_data_missing_response,
     build_missing_info_response,
     build_policy_response,
     build_unknown_response,
@@ -27,6 +28,7 @@ from app.dialogue.conversation_state import ConversationState
 from app.dialogue.conversation_state_store import ConversationStateStore
 from app.financial.financial_contracts import FinancialTools
 from app.financial.financial_decision_engine import FinancialDecisionEngine
+from app.financial.user_financial_profile import MissingFinancialDataError
 
 
 class ChatRouter:
@@ -49,6 +51,10 @@ class ChatRouter:
         intent_result = parse_intent(request.message)
         extracted_parameters = extract_parameters(request.message)
         existing_state = self._state_store.get(request.user_id, session_id)
+        financial_context_summary = _financial_context_summary(
+            self._tools,
+            request.user_id,
+        )
 
         if (
             assistant_intent != "unknown"
@@ -57,7 +63,7 @@ class ChatRouter:
             policy_decision = decide_response_policy(
                 user_message=request.message,
                 assistant_intent=assistant_intent,
-                financial_context_summary=None,
+                financial_context_summary=financial_context_summary,
             )
             answer_plan = build_answer_plan(
                 user_message=request.message,
@@ -109,7 +115,7 @@ class ChatRouter:
             policy_decision = decide_response_policy(
                 user_message=request.message,
                 assistant_intent=resolved_assistant_intent,
-                financial_context_summary=_demo_financial_context_summary(),
+                financial_context_summary=financial_context_summary,
                 missing_fields=missing_fields,
             )
             self._save_pending_state(
@@ -132,20 +138,40 @@ class ChatRouter:
                 state_cleared=False,
             )
 
-        execution = execute_tool(
-            resolved_turn.intent,
-            request.user_id,
-            resolved_turn.parameters,
-            self._tools,
-            self._decision_engine,
-        )
         resolved_assistant_intent = _assistant_intent_for_resolved_intent(
             resolved_turn.intent
         )
+        try:
+            execution = execute_tool(
+                resolved_turn.intent,
+                request.user_id,
+                resolved_turn.parameters,
+                self._tools,
+                self._decision_engine,
+            )
+        except MissingFinancialDataError:
+            policy_decision = decide_response_policy(
+                user_message=request.message,
+                assistant_intent=resolved_assistant_intent,
+                financial_context_summary=financial_context_summary,
+            )
+            self._state_store.clear(request.user_id, session_id)
+            return build_financial_data_missing_response(
+                intent_result.model_copy(update={"intent": resolved_turn.intent}),
+                resolved_turn.parameters,
+                session_id=session_id,
+                assistant_intent=resolved_assistant_intent,
+                policy_decision=policy_decision,
+                active_intent_before=resolved_turn.active_intent_before,
+                active_intent_after=None,
+                state_continued=resolved_turn.state_continued,
+                state_cleared=True,
+            )
+
         policy_decision = decide_response_policy(
             user_message=request.message,
             assistant_intent=resolved_assistant_intent,
-            financial_context_summary=_demo_financial_context_summary(),
+            financial_context_summary=financial_context_summary,
             calculation_result=execution.result,
         )
         self._state_store.clear(request.user_id, session_id)
@@ -234,12 +260,11 @@ def _assistant_intent_for_resolved_intent(intent: IntentName) -> AssistantIntent
     return AssistantIntent.UNKNOWN
 
 
-def _demo_financial_context_summary() -> dict[str, bool]:
-    return {
-        "has_transactions": True,
-        "has_current_balance": True,
-        "has_salary_date": True,
-        "has_recurring_expenses": True,
-        "has_upcoming_expenses": True,
-        "has_live_bank_data": False,
-    }
+def _financial_context_summary(
+    tools: FinancialTools,
+    user_id: str,
+) -> dict[str, object] | None:
+    summary_builder = getattr(tools, "financial_context_summary", None)
+    if not callable(summary_builder):
+        return None
+    return summary_builder(user_id)

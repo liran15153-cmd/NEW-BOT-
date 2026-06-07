@@ -18,18 +18,18 @@ The current backend supports:
 - deterministic intent detection
 - deterministic amount and installment extraction
 - short multi-turn clarification flows
-- demo cash-flow status
-- demo purchase simulation
-- demo installment simulation
+- manual financial profile ingestion
+- profile-backed cash-flow status
+- profile-backed purchase simulation
+- profile-backed installment simulation
 - unknown / unsupported message handling
 - structured debug metadata for internal testing
-- deterministic weekly safe-spend projection from demo cash-flow facts
-- deterministic overdraft-risk projection before salary from demo cash-flow facts
-- deterministic upcoming-expense pressure from demo near-term commitments
+- deterministic weekly safe-spend projection from provided profile facts
+- deterministic overdraft-risk projection before salary from provided profile facts
+- deterministic upcoming-expense pressure from provided committed obligations
 
 The current backend does not support:
 
-- real user financial data
 - database persistence
 - Supabase
 - WhatsApp delivery
@@ -54,7 +54,7 @@ The assistant should help a user understand a near-term financial decision in pl
 For the current backend, that means:
 
 ```txt
-The user can ask a simple cash-flow, weekly safe-spend, overdraft-risk, upcoming-expense, purchase, or installment question and receive a clear Hebrew response based on deterministic demo financial context.
+After the user has provided a validated financial profile, they can ask a simple cash-flow, weekly safe-spend, overdraft-risk, upcoming-expense, purchase, or installment question and receive a clear Hebrew response based on deterministic calculations.
 ```
 
 The assistant should feel:
@@ -121,15 +121,15 @@ How is my cash flow?
 
 Expected behavior:
 
-- Return a Hebrew answer based on demo financial context.
+- Return a Hebrew answer based on the user's stored financial profile.
 - Mention available buffer, safe-to-spend amount, days until salary, or risk level when available.
-- Do not invent real account data.
-- Do not imply the demo context is live bank data.
+- Do not invent account data, salary dates, obligations, or transactions.
+- If no profile exists, ask for financial data instead of answering.
 
 Current limitation:
 
 ```txt
-The answer is based on mock/demo financial facts only.
+The profile is stored in memory only and does not survive process restarts.
 ```
 
 ### 2. Weekly Safe-Spend Projection
@@ -150,7 +150,7 @@ How much can I safely spend this week?
 
 Expected behavior:
 
-- Return a Hebrew answer based on demo financial context.
+- Return a Hebrew answer based on the user's stored financial profile.
 - Include the projected weekly safe-to-spend amount.
 - Mention that the amount is calculated from the remaining days until salary.
 - Do not claim this is live bank data or a production budget.
@@ -164,7 +164,7 @@ weekly_safe_to_spend = floor(safe_to_spend_until_salary * min(7, days_until_sala
 The calculation uses minor currency units and rounds down so the answer does not
 overstate what is safe.
 
-Current default demo result:
+Synthetic test fixture result:
 
 ```txt
 500.00 ILS safe-to-spend over 9 days -> 388.88 ILS safe this week
@@ -188,7 +188,7 @@ Am I likely to enter overdraft before payday?
 
 Expected behavior:
 
-- Return a Hebrew answer based on demo financial context.
+- Return a Hebrew answer based on the user's stored financial profile.
 - Project the balance before salary from current balance minus committed expenses until salary.
 - If the projection is negative, include the overdraft gap and mark the risk as high.
 - If the projection is positive but expected expenses are high, say no overdraft is currently projected while still recommending spending restraint.
@@ -201,7 +201,7 @@ projected_balance_before_salary = current_balance - committed_expenses_until_sal
 overdraft_gap = max(0, -projected_balance_before_salary)
 ```
 
-Current default demo result:
+Synthetic test fixture result:
 
 ```txt
 2500.00 ILS current balance - 1800.00 ILS committed expenses -> 700.00 ILS projected before salary; no projected overdraft, medium risk.
@@ -225,7 +225,7 @@ What payments are coming soon?
 
 Expected behavior:
 
-- Return a Hebrew answer based on demo financial context.
+- Return a Hebrew answer based on the user's stored financial profile.
 - Include total committed expenses in the next 7 days.
 - Include the number of upcoming charges, days until the next charge, and largest upcoming expense when available.
 - Compare the upcoming amount with the safe-to-spend amount through the decision engine.
@@ -237,7 +237,7 @@ Current deterministic rule:
 projected_balance_after_upcoming = current_balance - upcoming_expenses_next_7_days
 ```
 
-Current default demo result:
+Synthetic test fixture result:
 
 ```txt
 650.00 ILS due in the next 7 days across 3 charges; largest charge is 450.00 ILS; next charge is in 2 days; projected balance after near-term commitments is 1850.00 ILS; medium risk.
@@ -396,7 +396,7 @@ You should definitely buy it.
 Prefer Hebrew phrasing like:
 
 ```txt
-לפי נתוני הדמו, זה אפשרי אבל די צפוף.
+לפי הנתונים שסיפקת, זה אפשרי אבל די צפוף.
 ```
 
 ```txt
@@ -425,12 +425,12 @@ It should not invent:
 
 If data is missing, the assistant should ask for the missing field.
 
-If data is demo-only, the answer should be phrased as demo-based behavior, not as a live financial truth.
+If data is missing, the assistant should ask for the missing financial data instead of inventing a number. If data comes from a manual profile, the answer should say it is based on the provided data and avoid implying live bank access.
 
 Current acceptable wording:
 
 ```txt
-לפי נתוני הדמו...
+לפי הנתונים שסיפקת...
 ```
 
 Current unacceptable wording:
@@ -458,6 +458,14 @@ missing months -> ask for months
 ```
 
 Missing-field responses must not call financial tools.
+
+For financial profile readiness:
+
+```txt
+missing profile -> ask for current balance, next salary date, and committed obligations
+```
+
+Missing profile responses must not call financial tools.
 
 ## Safety Boundaries
 
@@ -561,7 +569,7 @@ User:
 Assistant:
 
 ```txt
-לפי נתוני הדמו, אפשר לבצע את הקנייה, אבל היא תשאיר כרית ביטחון נמוכה עד המשכורת.
+לפי הנתונים שסיפקת, קנייה של 400 ₪ אפשרית, אבל היא תשאיר כרית ביטחון נמוכה עד המשכורת.
 ```
 
 Expected metadata:
@@ -643,9 +651,9 @@ The full product may eventually support:
 - subscription detection
 - money leak analysis
 - transaction explanation
+- manual financial data entry
 - CSV import
 - Open Banking
-- manual financial data entry
 - employer-facing aggregate analytics
 - privacy-safe onboarding
 - consent and deletion flows
@@ -691,7 +699,7 @@ When implementing product behavior:
 
 These should not be guessed by coding agents:
 
-1. What is the first real data source: manual entry, CSV import, or database-backed demo data?
+1. Should the next real data source be CSV import or persisted manual profiles?
 2. What is the default safe-buffer threshold?
 3. How should the assistant define safe, tight, and risky in production?
 4. When should recurring-payment detection become active work?

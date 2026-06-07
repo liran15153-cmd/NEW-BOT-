@@ -14,6 +14,7 @@ The backend currently supports:
 - `GET /health`
 - `POST /chat/message`
 - local browser tester at `GET /tester`
+- manual financial profile ingestion through `POST /financial/profile`
 - deterministic intent parsing
 - deterministic amount and installment extraction
 - conservative installment monthly-payment calculation
@@ -21,11 +22,11 @@ The backend currently supports:
 - assistant response policy and data-readiness checks
 - structured Pydantic request and response schemas
 - structured financial tool contracts
-- mock financial tools with demo financial facts
+- profile-backed financial tools using explicitly provided user data
 - deterministic financial decision engine
-- deterministic weekly safe-spend projection from demo cash-flow facts
-- deterministic overdraft-risk projection before salary from demo cash-flow facts
-- deterministic upcoming-expense pressure from demo near-term commitments
+- deterministic weekly safe-spend projection from stored profile facts
+- deterministic overdraft-risk projection before salary from stored profile facts
+- deterministic upcoming-expense pressure from stored committed obligations
 - Hebrew user-facing answers
 - internal debug metadata for testing
 - pytest coverage for API, bot, dialogue, financial contracts, architecture, and
@@ -54,6 +55,7 @@ app/
   main.py
   api/
     chat_message_api.py
+    financial_profile_api.py
     health_check_api.py
   ai/
     assistant_policy_schemas.py
@@ -75,6 +77,7 @@ app/
     financial_contracts.py
     financial_decision_engine.py
     demo_financial_tools.py
+    user_financial_profile.py
     financial_reason_codes.py
   core/
     app_settings.py
@@ -97,6 +100,7 @@ User message
   -> parameter extractor
   -> dialogue manager
   -> missing-field validation
+  -> financial context readiness check
   -> financial tool + decision engine, only when required fields exist
   -> answer planner
   -> Hebrew response builder
@@ -104,6 +108,8 @@ User message
 ```
 
 Missing-field and unknown-intent cases must not call financial tools.
+If no financial profile exists for the user, chat returns `needs_more_info`
+instead of inventing balances, salary dates, or expenses.
 
 ## Supported Intents
 
@@ -140,6 +146,39 @@ Expected tool behavior:
 - `needs_more_info`: `tool_called = null` and `debug.tool_executed = false`
 - `unknown`: `tool_called = null` and `debug.tool_executed = false`
 
+## Manual Financial Profile
+
+Before chat can answer projection or affordability questions, the current app
+expects an explicit user financial profile. This is intentionally a real input
+contract, not seeded production behavior.
+
+```powershell
+Invoke-RestMethod `
+  -Method Post `
+  -Uri "http://127.0.0.1:8000/financial/profile" `
+  -ContentType "application/json" `
+  -Body '{
+    "user_id": "user_123",
+    "as_of_date": "2026-06-07",
+    "current_balance_minor": 250000,
+    "next_salary_date": "2026-06-16",
+    "safety_buffer_minor": 20000,
+    "committed_obligations": [
+      {
+        "label": "rent",
+        "amount_minor": 120000,
+        "due_date": "2026-06-10",
+        "currency": "ILS"
+      }
+    ]
+  }'
+```
+
+The route validates required dates and rejects committed obligations whose
+`due_date` is before `as_of_date`. Profiles are stored in memory only for the
+current process. This is enough to exercise the real calculation path locally,
+but it is not production persistence.
+
 ## Weekly Safe-Spend Projection
 
 The backend supports questions such as:
@@ -149,13 +188,14 @@ The backend supports questions such as:
 How much can I safely spend this week?
 ```
 
-The current demo tool computes this from the existing safe-to-spend amount until
-salary. It projects at most the next 7 days, prorates the safe-to-spend amount
-over the remaining days until salary using integer minor-unit math, and rounds
-the weekly cap down so the assistant does not overstate what is safe.
+The profile-backed tool computes this from the current balance, committed
+obligations due by salary, and the configured safety buffer. It projects at most
+the next 7 days, prorates the safe-to-spend amount over the remaining days until
+salary using integer minor-unit math, and rounds the weekly cap down so the
+assistant does not overstate what is safe.
 
-With the default demo facts, `500.00 ILS` safe-to-spend over 9 days produces a
-weekly cap of `388.88 ILS`.
+In tests, the synthetic profile fixture uses `500.00 ILS` safe-to-spend over 9
+days, which produces a weekly cap of `388.88 ILS`.
 
 ## Overdraft Risk Projection
 
@@ -166,7 +206,7 @@ The backend supports questions such as:
 Am I likely to enter overdraft before payday?
 ```
 
-The current demo tool projects the balance before the next salary as:
+The profile-backed tool projects the balance before the next salary as:
 
 ```text
 projected_balance_before_salary = current_balance - committed_expenses_until_salary
@@ -178,10 +218,9 @@ expected expenses are high, the answer says no overdraft is currently projected
 while still marking the risk as medium. This keeps "not projected to enter
 overdraft" separate from "safe to spend freely".
 
-With the default demo facts, `2500.00 ILS` current balance minus `1800.00 ILS`
-committed expenses leaves `700.00 ILS` projected before salary, so no overdraft
-is currently projected, but the risk remains medium because expected expenses
-are high and there are 9 days until salary.
+The calculation uses the stored profile's current balance and committed
+obligations due on or before `next_salary_date`. It does not use demo balances
+unless a test explicitly injects a fixture.
 
 ## Upcoming Expense Pressure
 
@@ -192,17 +231,14 @@ The backend supports questions such as:
 What payments are coming soon?
 ```
 
-The current demo tool reports near-term committed expenses without pretending to
-have merchant names or live transaction history. It returns the total upcoming
-expense amount in the next 7 days, the largest upcoming expense, days until the
-next expense, projected balance after those near-term commitments, and risk
-metadata.
+The profile-backed tool reports near-term committed obligations without
+pretending to have merchant names or live transaction history. It returns the
+total upcoming expense amount in the next 7 days, the largest upcoming expense,
+days until the next expense, projected balance after those near-term
+commitments, and risk metadata.
 
-With the default demo facts, the next 7 days include `650.00 ILS` in committed
-expenses across 3 charges. The largest is `450.00 ILS`, the next charge is due
-in 2 days, and the projected balance after near-term commitments is
-`1850.00 ILS`. Because the upcoming amount exceeds the current safe-to-spend
-amount, the decision remains medium risk.
+The tool only uses obligations that the user profile supplied. It does not
+invent subscription labels, merchant names, or transaction history.
 
 ## Setup
 
@@ -262,21 +298,21 @@ Invoke-RestMethod `
   -Method Post `
   -Uri "http://127.0.0.1:8000/chat/message" `
   -ContentType "application/json" `
-  -Body '{"user_id":"user_123","session_id":"demo","message":"אפשר לקנות אוזניות ב-400 שקל?"}'
+  -Body '{"user_id":"user_123","session_id":"manual","message":"אפשר לקנות אוזניות ב-400 שקל?"}'
 ```
 
 Example response shape:
 
 ```json
 {
-  "answer": "לפי נתוני הדמו, אפשר לבצע את הקנייה, אבל היא תשאיר כרית ביטחון נמוכה עד המשכורת.",
+  "answer": "לפי הנתונים שסיפקת, קנייה של 400 ₪ אפשרית, אבל היא תשאיר כרית ביטחון נמוכה עד המשכורת.",
   "intent": "simulate_purchase",
   "status": "answered",
   "tool_called": "simulate_purchase",
   "confidence": 0.85,
   "missing_fields": [],
   "debug": {
-    "session_id": "demo",
+    "session_id": "manual",
     "normalized_message": "אפשר לקנות אוזניות ב-400 שקל?",
     "matched_rule": "purchase_keyword",
     "parameters": {
@@ -367,8 +403,10 @@ payments. This keeps affordability checks from understating future obligations.
 
 ## Current Limitations
 
-This backend uses demo financial facts only. It does not access real accounts,
-store user financial data, import files, or call external AI providers.
+This backend stores manually posted financial profiles in memory only. It does
+not access real accounts, persist data across process restarts, import files, or
+call external AI providers.
 
-Before adding real data infrastructure, the project needs explicit decisions on
-data source, privacy rules, retention, authentication, and test coverage.
+Before release, the project still needs persistent storage, authentication,
+consent, retention/deletion rules, and a safer ingestion path for real user
+financial data.

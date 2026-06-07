@@ -8,6 +8,7 @@ import httpx
 
 from app.main import create_app
 from app.financial.demo_financial_tools import DemoFinancialTools
+from tests.api_test_client import seed_financial_profile
 
 
 FORBIDDEN_DEPENDENCY_MARKERS = {
@@ -191,6 +192,7 @@ def test_extremely_large_purchase_remains_structured_and_deterministic() -> None
 
 def test_session_state_does_not_leak_across_sessions_for_same_user() -> None:
     app = create_app()
+    seed_financial_profile(app, "user_123")
 
     first = anyio.run(_post_json_with_app, app, {
         "user_id": "user_123",
@@ -258,6 +260,8 @@ async def _post_json(
     tools: CountingFinancialTools | None = None,
 ) -> httpx.Response:
     app = create_app(tools=tools) if tools is not None else create_app()
+    if tools is None and "user_id" in payload:
+        seed_financial_profile(app, str(payload["user_id"]))
     return await _post_json_with_app(app, payload)
 
 
@@ -272,6 +276,8 @@ async def _post_json_with_app(app, payload: dict[str, Any]) -> httpx.Response:
 
 async def _run_bounded_concurrent_requests() -> list[httpx.Response]:
     app = create_app()
+    for index in range(40):
+        seed_financial_profile(app, f"user_{index}")
     transport = httpx.ASGITransport(app=app)
     payloads = [
         {

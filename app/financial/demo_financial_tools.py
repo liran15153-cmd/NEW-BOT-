@@ -150,6 +150,18 @@ class DemoFinancialTools:
             days_until_salary=self._context.days_until_salary,
         )
 
+    def financial_context_summary(self, user_id: str) -> dict[str, object]:
+        del user_id
+        return {
+            "has_transactions": True,
+            "has_current_balance": True,
+            "has_salary_date": True,
+            "has_recurring_expenses": True,
+            "has_upcoming_expenses": True,
+            "has_imported_data": True,
+            "has_live_bank_data": False,
+        }
+
 
 def _ceil_divide_minor(amount_minor: int, parts: int) -> int:
     return -(-amount_minor // parts)

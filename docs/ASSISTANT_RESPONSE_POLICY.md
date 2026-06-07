@@ -66,7 +66,7 @@ error_fallback
 ```
 
 Projection-style financial answers should normally be cautious estimates, even
-when the demo context is complete. Future cash flow is not guaranteed.
+when the user profile context is complete. Future cash flow is not guaranteed.
 
 ## Assistant Intents
 
@@ -126,8 +126,9 @@ The assistant must not:
 - recommend taking loans
 - provide tax or legal advice
 - present estimates as guaranteed facts
-- imply it accessed real bank data when only demo data exists
+- imply it accessed live bank data when only manual profile data exists
 - execute financial tools when required user parameters are missing
+- execute financial tools when required financial profile data is missing
 - execute financial tools for privacy, unsupported-advice, or future-feature
   requests
 
@@ -155,9 +156,9 @@ not contain user-facing Hebrew answer copy.
 
 ## Current Limitations
 
-The policy layer currently uses demo financial context only. It does not connect
-to real accounts, imports, Supabase, WhatsApp, Open Banking, a database, or an
-LLM.
+The policy layer currently evaluates manually posted financial profile context.
+It does not connect to real accounts, file imports, Supabase, WhatsApp, Open
+Banking, a persistent database, or an LLM.
 
 Recurring expenses, money leaks, and transaction explanations are recognized as
 future product intents. They currently ask for transaction history instead of

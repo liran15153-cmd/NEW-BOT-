@@ -131,6 +131,45 @@ def build_missing_info_response(
     )
 
 
+def build_financial_data_missing_response(
+    intent_result: IntentParseResult,
+    parameters: ExtractedParameters,
+    *,
+    session_id: str,
+    assistant_intent: AssistantIntent,
+    policy_decision: ResponsePolicyDecision,
+    active_intent_before: IntentName | None = None,
+    active_intent_after: IntentName | None = None,
+    state_continued: bool = False,
+    state_cleared: bool = False,
+) -> ChatMessageResponse:
+    return ChatMessageResponse(
+        answer=(
+            "אין לי עדיין נתונים פיננסיים שלך כדי לחשב את זה. "
+            "צריך להזין לפחות יתרה נוכחית, תאריך משכורת קרוב "
+            "והוצאות מחויבות קרובות. בלי זה לא אמציא מספרים."
+        ),
+        intent=intent_result.intent,
+        status="needs_more_info",
+        tool_called=None,
+        confidence=intent_result.confidence,
+        missing_fields=policy_decision.missing_fields,
+        debug=_debug(
+            intent_result,
+            parameters,
+            session_id=session_id,
+            active_intent_before=active_intent_before,
+            active_intent_after=active_intent_after,
+            state_continued=state_continued,
+            state_cleared=state_cleared,
+            tool_executed=False,
+            execution=None,
+            assistant_intent=assistant_intent,
+            policy_decision=policy_decision,
+        ),
+    )
+
+
 def build_answered_response(
     intent_result: IntentParseResult,
     parameters: ExtractedParameters,
@@ -276,7 +315,7 @@ def _policy_answer(
     if assistant_intent == AssistantIntent.SAFETY_BOUNDARY_REQUEST:
         return (
             "אני לא יכול לעקוף הוראות בטיחות או פרטיות. אפשר לשאול אותי "
-            "על תזרים, קנייה נקודתית או פריסה לתשלומים לפי נתוני הדמו."
+            "על תזרים, קנייה נקודתית או פריסה לתשלומים לפי נתונים שסיפקת."
         )
     if assistant_intent == AssistantIntent.PRIVACY_QUESTION:
         return (
@@ -311,7 +350,7 @@ def _policy_answer(
     if assistant_intent == AssistantIntent.GENERAL_HELP:
         return (
             "אפשר לשאול אותי על תזרים, קנייה נקודתית או פריסה לתשלומים "
-            "על בסיס נתוני דמו."
+            "על בסיס נתונים פיננסיים שהזנת."
         )
     return "אין לי מספיק מידע כדי לענות על זה בביטחון."
 
@@ -348,7 +387,7 @@ def _answered_text(
 ) -> str:
     if isinstance(result, CashflowDecisionResult):
         return (
-            "לפי נתוני הדמו, נשארו לך "
+            "לפי הנתונים שסיפקת, נשארו לך "
             f"{_format_minor(result.available_buffer_minor)} פנויים, ומתוכם "
             f"{_format_minor(result.safe_to_spend_minor)} מוגדרים כסכום בטוח יחסית. "
             f"יש עוד {result.days_until_salary} ימים עד המשכורת. "
@@ -358,11 +397,11 @@ def _answered_text(
     if isinstance(result, WeeklySpendDecisionResult):
         if result.weekly_safe_to_spend_minor <= 0:
             return (
-                "לפי נתוני הדמו, אין כרגע סכום בטוח להוצאה השבוע. "
+                "לפי הנתונים שסיפקת, אין כרגע סכום בטוח להוצאה השבוע. "
                 "עדיף לעצור הוצאות לא הכרחיות עד שתהיה תמונת תזרים ברורה יותר."
             )
         return (
-            "לפי נתוני הדמו, הסכום הבטוח יחסית להוצאה השבוע הוא "
+            "לפי הנתונים שסיפקת, הסכום הבטוח יחסית להוצאה השבוע הוא "
             f"{_format_minor(result.weekly_safe_to_spend_minor)}. "
             f"זה מחושב על בסיס {result.projection_days} ימים מתוך "
             f"{result.days_until_salary} ימים עד המשכורת, בערך "
@@ -373,7 +412,7 @@ def _answered_text(
     if isinstance(result, OverdraftRiskDecisionResult):
         if result.will_enter_overdraft:
             return (
-                "לפי נתוני הדמו, יש סיכון גבוה להיכנס למינוס לפני המשכורת. "
+                "לפי הנתונים שסיפקת, יש סיכון גבוה להיכנס למינוס לפני המשכורת. "
                 "אחרי ההוצאות המחויבות צפוי פער של "
                 f"{_format_minor(result.overdraft_gap_minor)}. "
                 "עדיף לצמצם הוצאות לא הכרחיות עכשיו. "
@@ -387,7 +426,7 @@ def _answered_text(
             else f"יש עוד {result.days_until_salary} ימים עד המשכורת. "
         )
         return (
-            "לפי נתוני הדמו, לא צפויה כניסה למינוס לפני המשכורת. "
+            "לפי הנתונים שסיפקת, לא צפויה כניסה למינוס לפני המשכורת. "
             "אחרי ההוצאות המחויבות צפויה להישאר יתרה של "
             f"{_format_minor(result.projected_balance_before_salary_minor)}. "
             f"{risk_note}"
@@ -397,13 +436,13 @@ def _answered_text(
     if isinstance(result, UpcomingExpensesDecisionResult):
         if result.upcoming_expenses_next_7_days_minor <= 0:
             return (
-                "לפי נתוני הדמו, אין הוצאות מחויבות קרובות ב-"
+                "לפי הנתונים שסיפקת, אין הוצאות מחויבות קרובות ב-"
                 f"{result.lookahead_days} הימים הקרובים. "
                 f"רמת הסיכון: {_risk_label(result.risk_level)}."
             )
         if result.projected_balance_after_upcoming_minor < 0:
             return (
-                "לפי נתוני הדמו, ההוצאות הקרובות יוצרות לחץ גבוה. "
+                "לפי הנתונים שסיפקת, ההוצאות הקרובות יוצרות לחץ גבוה. "
                 f"ב-{result.lookahead_days} הימים הקרובים צפויים "
                 f"{_format_minor(result.upcoming_expenses_next_7_days_minor)} "
                 "בהוצאות מחויבות, וזה עלול להוריד את היתרה מתחת לאפס. "
@@ -418,7 +457,7 @@ def _answered_text(
             else ""
         )
         return (
-            "לפי נתוני הדמו, ב-"
+            "לפי הנתונים שסיפקת, ב-"
             f"{result.lookahead_days} הימים הקרובים צפויות הוצאות מחויבות של "
             f"{_format_minor(result.upcoming_expenses_next_7_days_minor)} "
             f"ב-{result.upcoming_expense_count} חיובים. "
@@ -434,25 +473,25 @@ def _answered_text(
     if isinstance(result, PurchaseDecisionResult):
         if not result.can_purchase:
             return (
-                "לפי נתוני הדמו, לא מומלץ לבצע קנייה של "
+                "לפי הנתונים שסיפקת, לא מומלץ לבצע קנייה של "
                 f"{_format_minor(result.amount_minor)} כרגע. "
                 "היא חורגת מהסכום הבטוח ותפגע בכרית עד המשכורת."
             )
         if ReasonCode.LOW_BUFFER_AFTER_PURCHASE in result.reason_codes:
             return (
-                "לפי נתוני הדמו, קנייה של "
+                "לפי הנתונים שסיפקת, קנייה של "
                 f"{_format_minor(result.amount_minor)} אפשרית, אבל היא תשאיר כרית "
                 "ביטחון נמוכה עד המשכורת. עדיף להמתין או להפחית את הסכום."
             )
         return (
-            "לפי נתוני הדמו, קנייה של "
+            "לפי הנתונים שסיפקת, קנייה של "
             f"{_format_minor(result.amount_minor)} אפשרית והיא עדיין משאירה "
             "כרית ביטחון סבירה עד המשכורת."
         )
 
     if isinstance(result, InstallmentsDecisionResult):
         return (
-            "לפי נתוני הדמו, פריסה ל-"
+            "לפי הנתונים שסיפקת, פריסה ל-"
             f"{result.months} תשלומים תיצור תשלום חודשי של "
             f"{_format_minor(result.monthly_payment_minor)}. "
             "חשוב לזכור שפריסה יוצרת התחייבות עתידית. "

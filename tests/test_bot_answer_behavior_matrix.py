@@ -4,6 +4,7 @@ import anyio
 import httpx
 
 from app.main import create_app
+from tests.api_test_client import seed_financial_profile
 
 
 HE_CASHFLOW = "\u05db\u05de\u05d4 \u05e0\u05e9\u05d0\u05e8 \u05dc\u05d9 \u05e2\u05d3 \u05d4\u05de\u05e9\u05db\u05d5\u05e8\u05ea?"
@@ -367,11 +368,15 @@ def test_direct_hebrew_and_unicode_escaped_hebrew_requests_match() -> None:
 
 
 def _post(payload: dict[str, Any]) -> dict[str, Any]:
-    return anyio.run(_post_with_app, create_app(), payload)
+    app = create_app()
+    if "user_id" in payload:
+        seed_financial_profile(app, str(payload["user_id"]))
+    return anyio.run(_post_with_app, app, payload)
 
 
 def _post_turns(session_id: str, messages: list[str]) -> list[dict[str, Any]]:
     app = create_app()
+    seed_financial_profile(app, "matrix_user")
     return [
         anyio.run(
             _post_with_app,

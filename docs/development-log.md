@@ -1,5 +1,15 @@
 # Development Log
 
+## 2026-06-07 - Manual Financial Profile Data Path
+
+- Added `POST /financial/profile` for explicit manual financial snapshot ingestion.
+- Added validated profile contracts for current balance, profile date, next salary date, safety buffer, and committed obligations.
+- Added profile-backed financial tools for cashflow, weekly safe spend, overdraft risk, upcoming expenses, purchase simulation, and installment simulation.
+- Changed the default app wiring so chat no longer answers from seeded demo facts when no user financial data exists.
+- Missing financial profile data now returns a Hebrew `needs_more_info` response and does not execute financial tools.
+- Updated tests to seed synthetic profile fixtures explicitly instead of relying on production defaults.
+- Current limitation: profiles are stored in memory only; persistence, authentication, consent, retention, and CSV/Open Banking ingestion are still future work.
+
 ## 2026-06-07 - Deterministic Upcoming Expense Pressure
 
 - Added `upcoming_expenses` as a supported deterministic bot-brain intent.

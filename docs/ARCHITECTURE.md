@@ -13,16 +13,18 @@ The current product is a local, deterministic bot-brain backend for testing fina
 The backend currently supports:
 
 - `GET /health`
+- `POST /financial/profile`
 - `POST /chat/message`
 - deterministic intent parsing
 - deterministic parameter extraction
 - short in-memory multi-turn dialogue
 - structured financial contracts
-- mock financial tools
+- manual financial profile contracts and in-memory profile storage
+- profile-backed deterministic financial tools
 - a deterministic financial decision engine
-- deterministic weekly safe-spend projection from demo cash-flow facts
-- deterministic overdraft-risk projection before salary from demo cash-flow facts
-- deterministic upcoming-expense pressure from demo near-term commitments
+- deterministic weekly safe-spend projection from provided profile facts
+- deterministic overdraft-risk projection before salary from provided profile facts
+- deterministic upcoming-expense pressure from provided committed obligations
 - Hebrew user-facing responses
 - pytest coverage for API behavior, bot behavior, dialogue state, financial contracts, architecture boundaries, and audit checks
 
@@ -88,9 +90,9 @@ State must not become long-term memory.
 
 State must be injected or attached at app level so tests can reset it cleanly.
 
-### 5. Treat financial data as sensitive even in demos
+### 5. Treat financial data as sensitive
 
-Even mock financial flows should follow privacy-safe habits:
+Even local in-memory financial flows should follow privacy-safe habits:
 
 - do not log raw financial questions unnecessarily
 - do not expose sensitive values through debug text
@@ -113,6 +115,7 @@ Every behavioral change should include tests. The project should stay easy to ve
 Creates the FastAPI app and attaches replaceable dependencies at app level:
 
 - financial tools
+- financial profile store
 - conversation state store
 - financial decision engine
 
@@ -127,9 +130,10 @@ Current route files:
 ```txt
 app/api/health_check_api.py
 app/api/chat_message_api.py
+app/api/financial_profile_api.py
 ```
 
-API files should stay thin. They should not parse intents, calculate affordability, manage dialogue state, or build financial answers.
+API files should stay thin. They should not parse intents, calculate affordability, manage dialogue state, or build financial answers. `financial_profile_api.py` validates and stores explicit user profile snapshots only.
 
 ### `app/ai/`
 
@@ -179,13 +183,14 @@ Dialogue code should not build Hebrew answers and should not perform financial c
 
 ### `app/financial/`
 
-Owns financial contracts, mock financial facts, reason codes, and deterministic decisions.
+Owns financial contracts, manual profile contracts, local profile-backed tools, test/demo tools, reason codes, and deterministic decisions.
 
 Current expected files:
 
 ```txt
 app/financial/financial_contracts.py
 app/financial/demo_financial_tools.py
+app/financial/user_financial_profile.py
 app/financial/financial_decision_engine.py
 app/financial/financial_reason_codes.py
 ```
@@ -221,6 +226,7 @@ request
   -> load conversation state
   -> dialogue manager resolves current turn
   -> compute missing fields
+  -> check whether the user has enough financial profile context
   -> execute financial tool and decision engine only when required fields exist
   -> response builder creates Hebrew answer
   -> update or clear conversation state
@@ -230,6 +236,8 @@ request
 Missing-field cases must not call financial tools.
 
 Unknown intent cases must not call financial tools.
+
+Missing financial profile cases must return `needs_more_info`, `tool_called = null`, and `debug.tool_executed = false`. The assistant must not fall back to seeded balances or demo salaries.
 
 Valid completed cases should set:
 
@@ -312,16 +320,16 @@ simulate_installments
 salary. It must be calculated with integer minor-unit math and rounded down so
 the assistant does not overstate what is safe to spend this week.
 
-`overdraft_risk` is a projection over the current demo balance and committed
-expenses until salary. It must report the projected balance before salary and an
-overdraft gap only when the projection is negative. A positive projection with
-high expected expenses can still be medium risk; do not collapse that into a
-simple yes/no answer.
+`overdraft_risk` is a projection over the stored current balance and committed
+obligations due on or before salary. It must report the projected balance before
+salary and an overdraft gap only when the projection is negative. A positive
+projection with high expected expenses can still be medium risk; do not collapse
+that into a simple yes/no answer.
 
-`upcoming_expenses` reports near-term committed expenses from demo facts. It
-must expose totals, count, next due timing, largest upcoming expense, projected
-balance after those near-term commitments, and risk metadata. It must not invent
-merchant names, subscription labels, or transaction history.
+`upcoming_expenses` reports near-term committed obligations from the stored user
+profile. It must expose totals, count, next due timing, largest upcoming
+expense, projected balance after those near-term commitments, and risk metadata.
+It must not invent merchant names, subscription labels, or transaction history.
 
 ## Financial Model Rules
 
@@ -398,7 +406,7 @@ Current tests should remain local and deterministic. Do not require real bank da
 
 ## Security And Privacy Rules
 
-Until real user data exists, keep these rules as implementation blockers for future stages:
+For local manually entered financial profile data, keep these rules as implementation blockers for future stages:
 
 - never commit secrets
 - never expose service keys client-side
@@ -434,16 +442,16 @@ These are future product stages, not current implementation instructions.
 
 ## Near-Term Architecture Direction
 
-The next useful architecture work should focus on the bot brain, not infrastructure.
+The next useful architecture work should focus on making the manual data path more durable without jumping to large infrastructure.
 
 Recommended next stages:
 
 1. Improve deterministic intent and parameter coverage with tests.
-2. Add richer financial decision scenarios using mock/demo facts.
-3. Add confidence and uncertainty handling for incomplete demo data.
+2. Add richer validation and readiness checks for manual profile snapshots.
+3. Add confidence and uncertainty handling for partial manual data.
 4. Add explicit unsupported-intent handling.
 5. Add more bad-input and stress tests.
-6. Only after that, decide whether the next real data source should be manual input, CSV import, or Supabase-backed persistence.
+6. Decide whether the next durable source should be CSV import or database-backed persistence.
 
 ## Future Architecture Notes
 
@@ -509,7 +517,7 @@ A backend change is complete only when:
 
 These are intentionally unresolved and should not be guessed by coding agents:
 
-1. What is the first real data source: manual entry, CSV import, or database-backed demo data?
+1. Should manual entry stay as the first real data source, or should CSV import come next?
 2. When should Supabase be introduced, if at all?
 3. What authentication model is appropriate for employees?
 4. What financial data retention policy is acceptable?

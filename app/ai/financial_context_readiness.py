@@ -38,6 +38,7 @@ def evaluate_financial_context_readiness(
     has_balance = _has_current_balance(summary)
     has_salary = _has_salary_date(summary)
     has_transactions = summary.has_transactions is True
+    has_imported_data = summary.has_imported_data is True
     warnings = _readiness_warnings(summary)
     missing_fields = _missing_fields(
         has_balance=has_balance,
@@ -50,6 +51,7 @@ def evaluate_financial_context_readiness(
         has_balance=has_balance,
         has_salary=has_salary,
         has_transactions=has_transactions,
+        has_imported_data=has_imported_data,
         has_recurring_expenses=summary.has_recurring_expenses is True,
         has_upcoming_expenses=summary.has_upcoming_expenses is True,
     )
@@ -143,16 +145,18 @@ def _readiness_level(
     has_balance: bool,
     has_salary: bool,
     has_transactions: bool,
+    has_imported_data: bool,
     has_recurring_expenses: bool,
     has_upcoming_expenses: bool,
 ) -> DataReadinessLevel:
-    if has_balance and has_salary and has_transactions and (
+    has_projection_data = has_transactions or has_imported_data
+    if has_balance and has_salary and has_projection_data and (
         has_recurring_expenses or has_upcoming_expenses
     ):
         return DataReadinessLevel.HIGH
-    if has_transactions and has_salary:
+    if has_projection_data and has_salary:
         return DataReadinessLevel.MEDIUM
-    if has_transactions or has_balance or has_salary:
+    if has_projection_data or has_balance or has_salary:
         return DataReadinessLevel.LOW
     return DataReadinessLevel.NONE
 

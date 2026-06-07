@@ -2,6 +2,7 @@
 import httpx
 
 from app.main import create_app
+from tests.api_test_client import seed_financial_profile
 
 
 def _assert_hebrew_answer(answer: str) -> None:
@@ -23,6 +24,7 @@ async def _post_message(
     session_id: str | None,
 ) -> httpx.Response:
     app = create_app()
+    seed_financial_profile(app, user_id)
     payload: dict[str, str] = {"user_id": user_id, "message": message}
     if session_id is not None:
         payload["session_id"] = session_id
@@ -53,6 +55,7 @@ def test_single_turn_purchase_still_works() -> None:
 
 def test_multi_turn_purchase_continues_pending_intent() -> None:
     app = create_app()
+    seed_financial_profile(app, "user_123")
 
     first = anyio.run(_post_with_app, app, "אפשר לקנות את זה?", "purchase_session")
     assert first.status_code == 200
@@ -83,6 +86,7 @@ def test_multi_turn_purchase_continues_pending_intent() -> None:
 
 def test_multi_turn_installments_continues_pending_intent() -> None:
     app = create_app()
+    seed_financial_profile(app, "user_123")
 
     first = anyio.run(_post_with_app, app, "מה יקרה אם אפרוס לתשלומים?", "installments_session")
     assert first.status_code == 200
@@ -108,6 +112,7 @@ def test_multi_turn_installments_continues_pending_intent() -> None:
 
 def test_new_topic_overrides_pending_purchase() -> None:
     app = create_app()
+    seed_financial_profile(app, "user_123")
 
     first = anyio.run(_post_with_app, app, "אפשר לקנות את זה?", "override_session")
     assert first.json()["status"] == "needs_more_info"
@@ -127,6 +132,7 @@ def test_new_topic_overrides_pending_purchase() -> None:
 
 def test_missing_session_id_uses_default_user_session_key() -> None:
     app = create_app()
+    seed_financial_profile(app, "user_with_default_session")
 
     first = anyio.run(
         _post_with_app,
