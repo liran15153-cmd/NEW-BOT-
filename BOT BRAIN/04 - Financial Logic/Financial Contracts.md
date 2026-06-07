@@ -12,6 +12,7 @@ source: code
 
 - `CashflowStatusInput` -> `CashflowStatusResult`
 - `WeeklySpendInput` -> `WeeklySpendResult`
+- `OverdraftRiskInput` -> `OverdraftRiskResult`
 - `PurchaseSimulationInput` -> `PurchaseSimulationResult`
 - `InstallmentsSimulationInput` -> `InstallmentsSimulationResult`
 
@@ -19,6 +20,11 @@ source: code
 safe-to-spend amount, projected weekly safe-to-spend amount, projection days,
 remaining days until salary, and projected buffer after that weekly spend. These
 are facts for the response builder; they are not user-facing prose.
+
+`OverdraftRiskResult` carries current balance, committed expenses until salary,
+projected balance before salary, overdraft gap, days until salary, currency, and
+expected-expense pressure. It is still a deterministic projection from available
+facts, not a final answer string.
 
 ## Design Rule
 

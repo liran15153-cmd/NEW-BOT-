@@ -6,6 +6,8 @@ from app.financial.financial_contracts import (
     Currency,
     InstallmentsSimulationInput,
     InstallmentsSimulationResult,
+    OverdraftRiskInput,
+    OverdraftRiskResult,
     PurchaseSimulationInput,
     PurchaseSimulationResult,
     WeeklySpendInput,
@@ -63,6 +65,20 @@ class DemoFinancialTools:
             ),
             days_until_salary=self._context.days_until_salary,
             projection_days=projection_days,
+            currency=self._context.currency,
+            expected_expenses_high=self._context.expected_expenses_high,
+        )
+
+    def overdraft_risk(self, request: OverdraftRiskInput) -> OverdraftRiskResult:
+        projected_balance = self._context.available_buffer_minor
+        return OverdraftRiskResult(
+            current_balance_minor=self._context.current_balance_minor,
+            committed_expenses_until_salary_minor=(
+                self._context.committed_expenses_minor
+            ),
+            projected_balance_before_salary_minor=projected_balance,
+            overdraft_gap_minor=max(0, -projected_balance),
+            days_until_salary=self._context.days_until_salary,
             currency=self._context.currency,
             expected_expenses_high=self._context.expected_expenses_high,
         )
@@ -129,4 +145,3 @@ def _project_safe_spend_minor(
     if safe_to_spend_minor <= 0 or days_until_salary <= 0 or projection_days <= 0:
         return 0
     return (safe_to_spend_minor * projection_days) // days_until_salary
-

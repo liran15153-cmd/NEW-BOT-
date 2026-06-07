@@ -23,10 +23,11 @@ The bot brain is stable when the supported scenarios work repeatedly in `/tester
 
 ## Suggested Next Product Scenario
 
-Weekly safe-spend is now a current deterministic scenario. The next useful
-cash-flow scenario is likely overdraft risk before salary or upcoming-expense
-pressure, still using demo facts and deterministic services before adding real
-data infrastructure.
+Weekly safe-spend and overdraft risk before salary are now current deterministic
+scenarios. The next useful cash-flow scenario is likely upcoming-expense
+pressure, still using demo facts and deterministic services. If real transaction
+or import work starts, recurring-payment detection becomes a better next
+subsystem than another demo-only projection.
 
 ## Not Next
 

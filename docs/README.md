@@ -24,6 +24,7 @@ The backend currently supports:
 - mock financial tools with demo financial facts
 - deterministic financial decision engine
 - deterministic weekly safe-spend projection from demo cash-flow facts
+- deterministic overdraft-risk projection before salary from demo cash-flow facts
 - Hebrew user-facing answers
 - internal debug metadata for testing
 - pytest coverage for API, bot, dialogue, financial contracts, architecture, and
@@ -108,6 +109,7 @@ Missing-field and unknown-intent cases must not call financial tools.
 ```text
 cashflow_status
 weekly_spend
+overdraft_risk
 simulate_purchase
 simulate_installments
 privacy_question
@@ -152,6 +154,32 @@ the weekly cap down so the assistant does not overstate what is safe.
 
 With the default demo facts, `500.00 ILS` safe-to-spend over 9 days produces a
 weekly cap of `388.88 ILS`.
+
+## Overdraft Risk Projection
+
+The backend supports questions such as:
+
+```text
+האם אני אכנס למינוס לפני המשכורת?
+Am I likely to enter overdraft before payday?
+```
+
+The current demo tool projects the balance before the next salary as:
+
+```text
+projected_balance_before_salary = current_balance - committed_expenses_until_salary
+```
+
+If the projection is negative, the result includes an `overdraft_gap_minor` and
+the decision engine marks the risk as high. If the projection is positive but
+expected expenses are high, the answer says no overdraft is currently projected
+while still marking the risk as medium. This keeps "not projected to enter
+overdraft" separate from "safe to spend freely".
+
+With the default demo facts, `2500.00 ILS` current balance minus `1800.00 ILS`
+committed expenses leaves `700.00 ILS` projected before salary, so no overdraft
+is currently projected, but the risk remains medium because expected expenses
+are high and there are 9 days until salary.
 
 ## Setup
 
@@ -312,6 +340,7 @@ payments. This keeps affordability checks from understating future obligations.
 - [Product Behavior](./PRODUCT_BEHAVIOR.md)
 - [Assistant Response Policy](./ASSISTANT_RESPONSE_POLICY.md)
 - [Bot Answer Audit](./BOT_ANSWER_AUDIT.md)
+- [Development Log](./development-log.md)
 
 ## Current Limitations
 

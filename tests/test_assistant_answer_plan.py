@@ -48,6 +48,24 @@ def test_cautious_estimate_plan_contains_uncertainty_disclaimer_key() -> None:
     assert "future_cashflow_is_estimate" in plan.assumptions
 
 
+def test_overdraft_risk_plan_contains_projection_assumption() -> None:
+    decision = ResponsePolicyDecision(
+        allowed=True,
+        response_type=ResponseType.CAUTIOUS_ESTIMATE,
+        required_disclaimers=["uncertainty_required"],
+        must_include_uncertainty=True,
+    )
+
+    plan = build_answer_plan(
+        user_message="will I enter overdraft before payday?",
+        assistant_intent=AssistantIntent.OVERDRAFT_RISK,
+        response_policy_decision=decision,
+    )
+
+    assert plan.main_message_key == "cautious_estimate"
+    assert "future_cashflow_is_estimate" in plan.assumptions
+
+
 def test_unsupported_request_plan_contains_forbidden_claims() -> None:
     decision = ResponsePolicyDecision(
         allowed=False,

@@ -17,6 +17,7 @@ class ResponseType(str, Enum):
 class AssistantIntent(str, Enum):
     CASHFLOW_STATUS = "cashflow_status"
     WEEKLY_SAFE_SPEND = "weekly_safe_spend"
+    OVERDRAFT_RISK = "overdraft_risk"
     AFFORDABILITY_CHECK = "affordability_check"
     PAYMENT_SPLIT_SIMULATION = "payment_split_simulation"
     RECURRING_EXPENSES = "recurring_expenses"

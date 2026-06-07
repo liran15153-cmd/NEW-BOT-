@@ -15,6 +15,7 @@ from app.ai.financial_tool_executor import ToolExecutionResult
 from app.financial.financial_decision_engine import (
     CashflowDecisionResult,
     InstallmentsDecisionResult,
+    OverdraftRiskDecisionResult,
     PurchaseDecisionResult,
     WeeklySpendDecisionResult,
 )
@@ -337,6 +338,7 @@ def _answered_text(
     result: (
         CashflowDecisionResult
         | WeeklySpendDecisionResult
+        | OverdraftRiskDecisionResult
         | PurchaseDecisionResult
         | InstallmentsDecisionResult
         | None
@@ -363,6 +365,30 @@ def _answered_text(
             f"זה מחושב על בסיס {result.projection_days} ימים מתוך "
             f"{result.days_until_salary} ימים עד המשכורת, בערך "
             f"{_format_minor(result.daily_safe_to_spend_minor)} ליום. "
+            f"רמת הסיכון: {_risk_label(result.risk_level)}."
+        )
+
+    if isinstance(result, OverdraftRiskDecisionResult):
+        if result.will_enter_overdraft:
+            return (
+                "לפי נתוני הדמו, יש סיכון גבוה להיכנס למינוס לפני המשכורת. "
+                "אחרי ההוצאות המחויבות צפוי פער של "
+                f"{_format_minor(result.overdraft_gap_minor)}. "
+                "עדיף לצמצם הוצאות לא הכרחיות עכשיו. "
+                f"רמת הסיכון: {_risk_label(result.risk_level)}."
+            )
+        risk_note = (
+            "בגלל שיש עוד "
+            f"{result.days_until_salary} ימים עד המשכורת וההוצאות הצפויות גבוהות, "
+            "כדאי להגביל הוצאות לסכום הבטוח. "
+            if ReasonCode.EXPECTED_EXPENSES_HIGH in result.reason_codes
+            else f"יש עוד {result.days_until_salary} ימים עד המשכורת. "
+        )
+        return (
+            "לפי נתוני הדמו, לא צפויה כניסה למינוס לפני המשכורת. "
+            "אחרי ההוצאות המחויבות צפויה להישאר יתרה של "
+            f"{_format_minor(result.projected_balance_before_salary_minor)}. "
+            f"{risk_note}"
             f"רמת הסיכון: {_risk_label(result.risk_level)}."
         )
 
@@ -410,5 +436,3 @@ def _risk_label(risk_level) -> str:
     if risk_level == "medium":
         return "בינונית"
     return "גבוהה"
-
-

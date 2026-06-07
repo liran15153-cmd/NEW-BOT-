@@ -90,6 +90,17 @@ _WEEKLY_SAFE_SPEND_KEYWORDS = (
     "safely spend this week",
     "weekly budget",
 )
+_OVERDRAFT_RISK_KEYWORDS = (
+    "אכנס למינוס",
+    "להיכנס למינוס",
+    "עלול להיכנס למינוס",
+    "סיכון למינוס",
+    "מינוס לפני המשכורת",
+    "אוברדרפט",
+    "overdraft",
+    "negative balance",
+    "below zero",
+)
 _CASHFLOW_KEYWORDS = (
     "תזרים",
     "יתרה",
@@ -150,6 +161,7 @@ def classify_assistant_intent(message: str) -> AssistantIntent:
         (_PRIVACY_KEYWORDS, AssistantIntent.PRIVACY_QUESTION),
         (_PAYMENT_SPLIT_KEYWORDS, AssistantIntent.PAYMENT_SPLIT_SIMULATION),
         (_WEEKLY_SAFE_SPEND_KEYWORDS, AssistantIntent.WEEKLY_SAFE_SPEND),
+        (_OVERDRAFT_RISK_KEYWORDS, AssistantIntent.OVERDRAFT_RISK),
         (_AFFORDABILITY_KEYWORDS, AssistantIntent.AFFORDABILITY_CHECK),
         (_CASHFLOW_KEYWORDS, AssistantIntent.CASHFLOW_STATUS),
         (_RECURRING_EXPENSE_KEYWORDS, AssistantIntent.RECURRING_EXPENSES),
@@ -168,6 +180,8 @@ def executable_intent_for(assistant_intent: AssistantIntent) -> IntentName | Non
         return "cashflow_status"
     if assistant_intent == AssistantIntent.WEEKLY_SAFE_SPEND:
         return "weekly_spend"
+    if assistant_intent == AssistantIntent.OVERDRAFT_RISK:
+        return "overdraft_risk"
     if assistant_intent == AssistantIntent.AFFORDABILITY_CHECK:
         return "simulate_purchase"
     if assistant_intent == AssistantIntent.PAYMENT_SPLIT_SIMULATION:

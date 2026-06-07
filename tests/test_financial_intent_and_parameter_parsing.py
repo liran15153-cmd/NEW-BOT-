@@ -53,6 +53,7 @@ def test_extract_months_supports_hebrew_and_english_payment_phrases(
 def test_parse_intent_supports_hebrew_financial_messages() -> None:
     assert parse_intent("מה מצב התזרים שלי?").intent == "cashflow_status"
     assert parse_intent("כמה אפשר להוציא השבוע?").intent == "weekly_spend"
+    assert parse_intent("האם אני אכנס למינוס לפני המשכורת?").intent == "overdraft_risk"
     assert parse_intent("אפשר לקנות את זה?").intent == "simulate_purchase"
     assert parse_intent("מה יקרה אם אפרוס לתשלומים?").intent == "simulate_installments"
     assert parse_intent("Tell me a joke").intent == "unknown"
@@ -68,6 +69,16 @@ def test_parse_intent_detects_weekly_safe_spend_before_generic_spend() -> None:
     assert english.matched_rule == "weekly_spend_keyword"
 
 
+def test_parse_intent_detects_overdraft_risk_before_generic_cashflow() -> None:
+    hebrew = parse_intent("האם אני עלול להיכנס למינוס לפני המשכורת?")
+    english = parse_intent("Am I likely to enter overdraft before payday?")
+
+    assert hebrew.intent == "overdraft_risk"
+    assert hebrew.matched_rule == "overdraft_risk_keyword"
+    assert english.intent == "overdraft_risk"
+    assert english.matched_rule == "overdraft_risk_keyword"
+
+
 def test_router_contains_no_regex_patterns_or_user_facing_text() -> None:
     source = Path("app/ai/chat_router.py").read_text(encoding="utf-8")
 
@@ -75,5 +86,4 @@ def test_router_contains_no_regex_patterns_or_user_facing_text() -> None:
     assert "Based on" not in source
     assert "I need" not in source
     assert not any("\u0590" <= character <= "\u05ff" for character in source)
-
 

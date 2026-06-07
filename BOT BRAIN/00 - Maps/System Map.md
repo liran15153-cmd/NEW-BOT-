@@ -22,6 +22,8 @@ The flow also keeps missing data safe. The bot should ask for an amount, install
 
 For `Can I buy headphones for 400 shekels?`, the system classifies affordability, extracts `amount_minor = 40000`, executes the demo purchase tool, passes facts into the decision engine, and returns a Hebrew answer with `debug.tool_executed = true`.
 
+For `Am I likely to enter overdraft before payday?`, the system classifies overdraft risk, executes the demo overdraft-risk tool, projects balance before salary, passes the facts into the decision engine, and returns a Hebrew answer with no invented live-bank data.
+
 For `Should I take a loan to buy this?`, the system classifies unsupported loan advice, skips financial tools, and returns a safe policy response with `debug.tool_executed = false`.
 
 ## Hard Boundaries

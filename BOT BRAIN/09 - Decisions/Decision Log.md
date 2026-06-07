@@ -15,6 +15,7 @@ source: docs
 - Keep financial facts separate from answer wording.
 - Keep final Hebrew copy centralized in `hebrew_response_builder.py`.
 - Support weekly safe-spend as a deterministic projection before richer data infrastructure.
+- Support overdraft risk before salary as a deterministic projection from demo cash-flow facts.
 - Use in-memory state only for short clarification flows.
 - Recognize unsupported and future intents without pretending they are implemented.
 - Keep tests as architecture guardrails.
@@ -29,6 +30,11 @@ Weekly safe-spend: This is a useful employee question that can be answered from
 the existing demo cash-flow facts. It should stay conservative: prorate the
 safe-to-spend amount until salary across the next 7 days and round down in minor
 currency units.
+
+Overdraft risk before salary: This is a core employee question and can be
+answered honestly from existing demo facts without new infrastructure. The
+decision separates "no projected overdraft" from "low risk" so expected expense
+pressure can still produce a cautious answer.
 
 Centralized Hebrew copy: The product is Hebrew-facing, so answer quality needs one obvious ownership point. Scattered copy would make QA and tone control harder.
 

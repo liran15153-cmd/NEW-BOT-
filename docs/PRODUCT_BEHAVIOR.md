@@ -24,6 +24,7 @@ The current backend supports:
 - unknown / unsupported message handling
 - structured debug metadata for internal testing
 - deterministic weekly safe-spend projection from demo cash-flow facts
+- deterministic overdraft-risk projection before salary from demo cash-flow facts
 
 The current backend does not support:
 
@@ -84,6 +85,7 @@ They want to ask:
 
 - How is my cash flow?
 - What can I safely spend this week?
+- Am I likely to enter overdraft before payday?
 - Can I buy this?
 - Can I buy this for a specific amount?
 - What happens if I split this purchase into payments?
@@ -166,7 +168,44 @@ Current default demo result:
 500.00 ILS safe-to-spend over 9 days -> 388.88 ILS safe this week
 ```
 
-### 3. Purchase Simulation
+### 3. Overdraft Risk Before Salary
+
+User intent:
+
+```txt
+overdraft_risk
+```
+
+Example user questions:
+
+```txt
+האם אני אכנס למינוס לפני המשכורת?
+האם אני עלול להיכנס למינוס?
+Am I likely to enter overdraft before payday?
+```
+
+Expected behavior:
+
+- Return a Hebrew answer based on demo financial context.
+- Project the balance before salary from current balance minus committed expenses until salary.
+- If the projection is negative, include the overdraft gap and mark the risk as high.
+- If the projection is positive but expected expenses are high, say no overdraft is currently projected while still recommending spending restraint.
+- Do not imply this is live bank monitoring or a guaranteed future result.
+
+Current deterministic rule:
+
+```txt
+projected_balance_before_salary = current_balance - committed_expenses_until_salary
+overdraft_gap = max(0, -projected_balance_before_salary)
+```
+
+Current default demo result:
+
+```txt
+2500.00 ILS current balance - 1800.00 ILS committed expenses -> 700.00 ILS projected before salary; no projected overdraft, medium risk.
+```
+
+### 4. Purchase Simulation
 
 User intent:
 
@@ -199,7 +238,7 @@ Expected behavior when amount is missing:
 
 The assistant should not answer only “yes” or “no” unless the structured decision makes that safe.
 
-### 4. Installment Simulation
+### 5. Installment Simulation
 
 User intent:
 
@@ -238,7 +277,7 @@ Important product rule:
 Installments can reduce short-term pressure but create future obligations. Do not present installments as automatically better.
 ```
 
-### 5. Unknown Or Unsupported Message
+### 6. Unknown Or Unsupported Message
 
 User intent:
 

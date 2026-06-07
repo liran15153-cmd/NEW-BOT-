@@ -6,6 +6,7 @@ from app.financial.financial_contracts import (
     CashflowStatusResult,
     Currency,
     InstallmentsSimulationResult,
+    OverdraftRiskResult,
     PurchaseSimulationResult,
     RiskLevel,
     WeeklySpendResult,
@@ -19,6 +20,7 @@ class RecommendedAction(str, Enum):
     REDUCE_AMOUNT = "reduce_amount"
     AVOID = "avoid"
     LIMIT_TO_SAFE_AMOUNT = "limit_to_safe_amount"
+    REDUCE_SPENDING = "reduce_spending"
 
 
 class CashflowDecisionResult(BaseModel):
@@ -39,6 +41,19 @@ class WeeklySpendDecisionResult(BaseModel):
     projected_buffer_after_weekly_spend_minor: int
     days_until_salary: int
     projection_days: int
+    currency: Currency
+    risk_level: RiskLevel
+    reason_codes: list[ReasonCode]
+    recommended_action: RecommendedAction
+
+
+class OverdraftRiskDecisionResult(BaseModel):
+    will_enter_overdraft: bool
+    current_balance_minor: int
+    committed_expenses_until_salary_minor: int
+    projected_balance_before_salary_minor: int
+    overdraft_gap_minor: int
+    days_until_salary: int
     currency: Currency
     risk_level: RiskLevel
     reason_codes: list[ReasonCode]
@@ -73,6 +88,7 @@ class InstallmentsDecisionResult(BaseModel):
 DecisionResult = (
     CashflowDecisionResult
     | WeeklySpendDecisionResult
+    | OverdraftRiskDecisionResult
     | PurchaseDecisionResult
     | InstallmentsDecisionResult
 )
@@ -145,6 +161,45 @@ class FinancialDecisionEngine:
                 weekly_safe_to_spend_minor=facts.weekly_safe_to_spend_minor,
                 risk_level=risk_level,
             ),
+        )
+
+    def decide_overdraft_risk(
+        self,
+        facts: OverdraftRiskResult,
+    ) -> OverdraftRiskDecisionResult:
+        will_enter_overdraft = (
+            facts.projected_balance_before_salary_minor < 0
+            or facts.overdraft_gap_minor > 0
+        )
+        reason_codes = [
+            ReasonCode.PROJECTED_OVERDRAFT
+            if will_enter_overdraft
+            else ReasonCode.NO_PROJECTED_OVERDRAFT
+        ]
+        if facts.days_until_salary >= 7:
+            reason_codes.append(ReasonCode.MANY_DAYS_UNTIL_SALARY)
+        if facts.expected_expenses_high:
+            reason_codes.append(ReasonCode.EXPECTED_EXPENSES_HIGH)
+
+        risk_level = _overdraft_risk_level(
+            will_enter_overdraft=will_enter_overdraft,
+            expected_expenses_high=facts.expected_expenses_high,
+        )
+        return OverdraftRiskDecisionResult(
+            will_enter_overdraft=will_enter_overdraft,
+            current_balance_minor=facts.current_balance_minor,
+            committed_expenses_until_salary_minor=(
+                facts.committed_expenses_until_salary_minor
+            ),
+            projected_balance_before_salary_minor=(
+                facts.projected_balance_before_salary_minor
+            ),
+            overdraft_gap_minor=facts.overdraft_gap_minor,
+            days_until_salary=facts.days_until_salary,
+            currency=facts.currency,
+            risk_level=risk_level,
+            reason_codes=reason_codes,
+            recommended_action=_overdraft_action(risk_level),
         )
 
     def decide_purchase(
@@ -264,6 +319,26 @@ def _weekly_spend_action(
     return RecommendedAction.PROCEED
 
 
+def _overdraft_risk_level(
+    *,
+    will_enter_overdraft: bool,
+    expected_expenses_high: bool,
+) -> RiskLevel:
+    if will_enter_overdraft:
+        return RiskLevel.HIGH
+    if expected_expenses_high:
+        return RiskLevel.MEDIUM
+    return RiskLevel.LOW
+
+
+def _overdraft_action(risk_level: RiskLevel) -> RecommendedAction:
+    if risk_level == RiskLevel.HIGH:
+        return RecommendedAction.REDUCE_SPENDING
+    if risk_level == RiskLevel.MEDIUM:
+        return RecommendedAction.LIMIT_TO_SAFE_AMOUNT
+    return RecommendedAction.PROCEED
+
+
 def _purchase_action(
     can_purchase: bool,
     amount_minor: int,
@@ -277,5 +352,4 @@ def _purchase_action(
     if risk_level != RiskLevel.LOW:
         return RecommendedAction.WAIT
     return RecommendedAction.PROCEED
-
 

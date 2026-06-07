@@ -44,6 +44,20 @@ class WeeklySpendResult(BaseModel):
     expected_expenses_high: bool
 
 
+class OverdraftRiskInput(BaseModel):
+    user_id: str = Field(min_length=1)
+
+
+class OverdraftRiskResult(BaseModel):
+    current_balance_minor: int
+    committed_expenses_until_salary_minor: int
+    projected_balance_before_salary_minor: int
+    overdraft_gap_minor: int
+    days_until_salary: int
+    currency: Currency
+    expected_expenses_high: bool
+
+
 class PurchaseSimulationInput(BaseModel):
     user_id: str = Field(min_length=1)
     amount_minor: int = Field(gt=0)
@@ -90,6 +104,12 @@ class WeeklySpendTool(Protocol):
 
 
 @runtime_checkable
+class OverdraftRiskTool(Protocol):
+    def overdraft_risk(self, request: OverdraftRiskInput) -> OverdraftRiskResult:
+        ...
+
+
+@runtime_checkable
 class PurchaseSimulationTool(Protocol):
     def simulate_purchase(
         self,
@@ -111,10 +131,10 @@ class InstallmentsSimulationTool(Protocol):
 class FinancialTools(
     CashflowStatusTool,
     WeeklySpendTool,
+    OverdraftRiskTool,
     PurchaseSimulationTool,
     InstallmentsSimulationTool,
     Protocol,
 ):
     pass
-
 

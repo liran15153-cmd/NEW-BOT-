@@ -2,6 +2,7 @@
     CashflowStatusResult,
     Currency,
     InstallmentsSimulationResult,
+    OverdraftRiskResult,
     PurchaseSimulationResult,
     WeeklySpendResult,
 )
@@ -138,4 +139,49 @@ def test_weekly_spend_decision_handles_no_safe_amount_as_high_risk() -> None:
     assert decision.reason_codes == [ReasonCode.NO_SAFE_WEEKLY_SPEND]
     assert decision.recommended_action == RecommendedAction.WAIT
 
+
+def test_overdraft_risk_decision_flags_demo_projection_as_medium_risk() -> None:
+    decision = FinancialDecisionEngine().decide_overdraft_risk(
+        OverdraftRiskResult(
+            current_balance_minor=250000,
+            committed_expenses_until_salary_minor=180000,
+            projected_balance_before_salary_minor=70000,
+            overdraft_gap_minor=0,
+            days_until_salary=9,
+            currency=Currency.ILS,
+            expected_expenses_high=True,
+        )
+    )
+
+    assert decision.will_enter_overdraft is False
+    assert decision.projected_balance_before_salary_minor == 70000
+    assert decision.overdraft_gap_minor == 0
+    assert decision.risk_level == "medium"
+    assert decision.reason_codes == [
+        ReasonCode.NO_PROJECTED_OVERDRAFT,
+        ReasonCode.MANY_DAYS_UNTIL_SALARY,
+        ReasonCode.EXPECTED_EXPENSES_HIGH,
+    ]
+    assert decision.recommended_action == RecommendedAction.LIMIT_TO_SAFE_AMOUNT
+    assert "answer" not in type(decision).model_fields
+
+
+def test_overdraft_risk_decision_reduces_spending_when_projection_is_negative() -> None:
+    decision = FinancialDecisionEngine().decide_overdraft_risk(
+        OverdraftRiskResult(
+            current_balance_minor=10000,
+            committed_expenses_until_salary_minor=12500,
+            projected_balance_before_salary_minor=-2500,
+            overdraft_gap_minor=2500,
+            days_until_salary=4,
+            currency=Currency.ILS,
+            expected_expenses_high=False,
+        )
+    )
+
+    assert decision.will_enter_overdraft is True
+    assert decision.overdraft_gap_minor == 2500
+    assert decision.risk_level == "high"
+    assert decision.reason_codes == [ReasonCode.PROJECTED_OVERDRAFT]
+    assert decision.recommended_action == RecommendedAction.REDUCE_SPENDING
 

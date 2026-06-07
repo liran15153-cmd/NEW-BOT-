@@ -20,6 +20,12 @@ The default demo facts currently support weekly safe-spend projection too:
 `500.00 ILS` safe-to-spend over 9 days until salary becomes `388.88 ILS` for
 the next 7 days. The projection uses integer minor-unit math and rounds down.
 
+They also support overdraft-risk projection before salary:
+`2500.00 ILS` current balance minus `1800.00 ILS` committed expenses leaves
+`700.00 ILS` projected before salary. That means no overdraft is currently
+projected, but expected expenses are still high, so the decision remains medium
+risk.
+
 Demo context is not a toy if it is used correctly. It is the contract rehearsal for production data.
 
 ## Product Wording Rule

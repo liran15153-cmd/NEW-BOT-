@@ -32,6 +32,17 @@ _WEEKLY_SPEND_KEYWORDS = (
     "safely spend this week",
     "weekly budget",
 )
+_OVERDRAFT_RISK_KEYWORDS = (
+    "אכנס למינוס",
+    "להיכנס למינוס",
+    "עלול להיכנס למינוס",
+    "סיכון למינוס",
+    "מינוס לפני המשכורת",
+    "אוברדרפט",
+    "overdraft",
+    "negative balance",
+    "below zero",
+)
 _CASHFLOW_KEYWORDS = (
     "תזרים",
     "יתרה",
@@ -67,6 +78,14 @@ def parse_intent(message: str) -> IntentParseResult:
             normalized_message=normalized,
         )
 
+    if _contains_any(normalized, _OVERDRAFT_RISK_KEYWORDS):
+        return IntentParseResult(
+            intent="overdraft_risk",
+            confidence=0.87,
+            matched_rule="overdraft_risk_keyword",
+            normalized_message=normalized,
+        )
+
     if _contains_any(normalized, _PURCHASE_KEYWORDS):
         return IntentParseResult(
             intent="simulate_purchase",
@@ -93,4 +112,3 @@ def parse_intent(message: str) -> IntentParseResult:
 
 def _contains_any(message: str, keywords: tuple[str, ...]) -> bool:
     return any(keyword in message for keyword in keywords)
-

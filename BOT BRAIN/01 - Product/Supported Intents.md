@@ -12,6 +12,7 @@ There are two related intent layers: assistant-level intents and executable fina
 
 - `cashflow_status`
 - `weekly_safe_spend`
+- `overdraft_risk`
 - `affordability_check`
 - `payment_split_simulation`
 - `recurring_expenses`
@@ -34,6 +35,7 @@ This split is important because one user message can contain overlapping signals
 
 - `cashflow_status` -> `cashflow_status`
 - `weekly_safe_spend` -> `weekly_spend`
+- `overdraft_risk` -> `overdraft_risk`
 - `affordability_check` -> `simulate_purchase`
 - `payment_split_simulation` -> `simulate_installments`
 

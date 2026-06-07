@@ -5,6 +5,7 @@ from app.financial.financial_contracts import (
     CashflowStatusInput,
     FinancialTools,
     InstallmentsSimulationInput,
+    OverdraftRiskInput,
     PurchaseSimulationInput,
     RiskLevel,
     WeeklySpendInput,
@@ -41,6 +42,13 @@ def execute_tool(
         return _executed(
             "weekly_spend",
             decision_engine.decide_weekly_spend(facts),
+        )
+
+    if intent == "overdraft_risk":
+        facts = tools.overdraft_risk(OverdraftRiskInput(user_id=user_id))
+        return _executed(
+            "overdraft_risk",
+            decision_engine.decide_overdraft_risk(facts),
         )
 
     if intent == "simulate_purchase":
@@ -93,5 +101,4 @@ def _executed(
         risk_level=result.risk_level,
         reason_codes=result.reason_codes,
     )
-
 
